@@ -12,7 +12,7 @@ My copy of silarsis/docker-proxy with my config
 * add --build-arg http_proxy=http://192.168.178.32:3128
 * sample ```docker build --build-arg http_proxy=http://192.168.178.32:3128 -t mathiasstatdler/postgres .```
 * from here  https://github.com/docker/docker-registry/issues/890
-    - thx Anders Janmyr <https://github.com/andersjanmyr>
+    - thx Anders Janmyr for the Idea <https://github.com/andersjanmyr>
 
 
 #Howto Exclude Few Sites from Caching
