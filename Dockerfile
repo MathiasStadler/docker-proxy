@@ -36,6 +36,7 @@ RUN cd squid3-3.?.? \
     && cat /root/mime.conf >> /usr/share/squid3/mime.conf
 
 COPY squid.conf /etc/squid3/squid.conf
+COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
 COPY start_squid.sh /usr/local/bin/start_squid.sh
 
 VOLUME /var/spool/squid3 /etc/squid3/ssl_cert
