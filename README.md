@@ -9,8 +9,8 @@ My copy of silarsis/docker-proxy with my config
     * docker build  -t docker-proxy .
 
 # DOCKER build behind proxy
-* add --env http_proxy=http://10.128.46.150:3128/ 
-* sample ``` docker build --env http_proxy=http://10.128.46.150:3128/ -t my/http-client . ```
+* add --build-arg http_proxy=http://192.168.178.32:3128
+* sample ```docker build --build-arg http_proxy=http://192.168.178.32:3128 -t mathiasstatdler/postgres .```
 * from here  https://github.com/docker/docker-registry/issues/890
     - thx Anders Janmyr <https://github.com/andersjanmyr>
 
