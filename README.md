@@ -1,6 +1,20 @@
 # docker-proxy
 My copy of silarsis/docker-proxy with my config 
 
+
+
+# edit squid.conf
+* vi squid.conf
+* build docker images new
+    * docker build  -t docker-proxy .
+
+# DOCKER build behind proxy
+* add --env http_proxy=http://10.128.46.150:3128/ 
+* sample ``` docker build --env http_proxy=http://10.128.46.150:3128/ -t my/http-client . ```
+* from here  https://github.com/docker/docker-registry/issues/890
+    - thx Anders Janmyr <https://github.com/andersjanmyr>
+
+
 #Howto Exclude Few Sites from Caching
 * from here
 *  https://aacable.wordpress.com/2012/01/23/squid-howto-exclude-some-sites-exntension-from-caching/

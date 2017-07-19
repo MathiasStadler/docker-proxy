@@ -33,7 +33,8 @@ RUN cd squid3-3.?.? \
         ../squid3-common_3.?.?-?ubuntu?.?_all.deb \
         ../squid3_3.?.?-?ubuntu?.?_*.deb \
     && mkdir -p /etc/squid3/ssl_cert \
-    && cat /root/mime.conf >> /usr/share/squid3/mime.conf
+    && cat /root/mime.conf >> /usr/share/squid3/mime.conf \
+    && touch /var/cache/squid/ssl_db
 
 COPY squid.conf /etc/squid3/squid.conf
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
