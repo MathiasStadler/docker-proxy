@@ -15,6 +15,13 @@ My copy of silarsis/docker-proxy with my config
     - thx Anders Janmyr for the Idea <https://github.com/andersjanmyr>
 
 
+# ERROR Connection rest by cliant 
+- ERROR was rised by SQUID DOCKER WGET during the build process 
+    - add --enable-http-violations  to squid.patch
+    - add ``` via off
+forwarded_for delete ```
+
+
 #Howto Exclude Few Sites from Caching
 * from here
 *  https://aacable.wordpress.com/2012/01/23/squid-howto-exclude-some-sites-exntension-from-caching/

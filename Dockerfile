@@ -34,6 +34,7 @@ RUN cd squid3-3.?.? \
         ../squid3_3.?.?-?ubuntu?.?_*.deb \
     && mkdir -p /etc/squid3/ssl_cert \
     && cat /root/mime.conf >> /usr/share/squid3/mime.conf \
+    && mkdir -p /var/cache/squid \
     && touch /var/cache/squid/ssl_db
 
 COPY squid.conf /etc/squid3/squid.conf

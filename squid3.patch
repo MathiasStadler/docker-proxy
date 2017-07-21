@@ -11,3 +11,5 @@
 		--with-logdir=/var/log/squid3 \
 		--with-pidfile=/var/run/squid3.pid \
 		--with-filedescriptors=65536 \
+		--enable-http-violations \
+		--enable-ssl-crtd \
