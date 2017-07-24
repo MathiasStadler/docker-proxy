@@ -105,7 +105,7 @@ run () {
         --publish=3128:3128 \
         ${CONTAINER_NAME})
   IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${CID})
-  start_routing
+#  start_routing
   # Run at console, kill cleanly if ctrl-c is hit
   trap interrupted INT
   trap terminated TERM
