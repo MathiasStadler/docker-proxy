@@ -15,6 +15,9 @@ function gen-cert() {
     openssl x509 -sha1 -in ca.pem -noout -fingerprint
     # Make CA certificate available for download via HTTP Forwarding port
     # e.g. GET http://docker-proxy:3128/squid-internal-static/icons/ca.pem
+
+    #FIX add mkdir -p
+    mkdir -p /usr/share/squid3/icons/
     cp `pwd`/ca.* /usr/share/squid3/icons/
     popd > /dev/null
     return $?
@@ -23,7 +26,7 @@ function gen-cert() {
 function start-routing() {
     # Setup the NAT rule that enables transparent proxying
     IPADDR=$(/sbin/ip -o -f inet addr show eth0 | awk '{ sub(/\/.+/,"",$4); print $4 }')
-    echo "IPADDR =>  ${IPADDR}"
+    echo "IPADDR (start_squid.sh)=>  ${IPADDR}"
     iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
     iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination ${IPADDR}:3130
     return $?
@@ -31,8 +34,8 @@ function start-routing() {
 
 function init-cache() {
     # Make sure our cache is setup
-    touch /var/log/squid3/access.log /var/log/squid3/cache.log
-    chown proxy.proxy -R /var/spool/squid3 /var/log/squid3
+    touch /var/log/squid/access.log /var/log/squid/cache.log
+    chown proxy.proxy -R /var/spool/squid3 /var/log/squid
     [ -e /var/spool/squid3/swap.state ] || squid3 -z 2>/dev/null
 }
 
@@ -41,4 +44,4 @@ start-routing || exit 1
 init-cache
 
 squid3
-tail -f /var/log/squid3/access.log /var/log/squid3/cache.log
+tail -f /var/log/squid/access.log /var/log/squid/cache.log

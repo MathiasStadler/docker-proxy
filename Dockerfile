@@ -30,7 +30,8 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
         fakeroot \
         lintian \
         logrotate \
-        libdbi-perl 
+        libdbi-perl \
+        iproute2
     
     RUN cat /etc/apt/sources.list \ 
     #from here
@@ -102,10 +103,13 @@ RUN  ls -la \
     #  next line should match squid_3.5.23-5_amd64.deb
                            ./squid_3.?.??-?_amd64.deb \
     && mkdir -p /etc/squid3/ssl_cert \
+    && mkdir -p /usr/share/squid3 \
     && cat /root/mime.conf >> /usr/share/squid3/mime.conf \
     && mkdir -p /var/cache/squid \
-    && touch /var/cache/squid/ssl_db
+    && touch /var/cache/squid/ssl_db 
 
+    
+    
 COPY squid.conf /etc/squid3/squid.conf
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
 COPY start_squid.sh /usr/local/bin/start_squid.sh
