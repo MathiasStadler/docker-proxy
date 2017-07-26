@@ -105,19 +105,22 @@ RUN  ls -la \
                            ./squid-common_3.?.??-?_all.deb \
     #  next line should match squid_3.5.23-5_amd64.deb
                            ./squid_3.?.??-?_amd64.deb \
-    && mkdir -p /etc/squid3/ssl_cert \
-    && mkdir -p /usr/share/squid3 \
-    && cat /root/mime.conf >> /usr/share/squid3/mime.conf \
+    && mkdir -p /etc/squid/ssl_cert \
+    && mkdir -p /usr/share/squid \
+    && cat /root/mime.conf >> /usr/share/squid/mime.conf \
     && mkdir -p /var/cache/squid \
-    && touch /var/cache/squid/ssl_db 
+    && touch /var/cache/squid/ssl_db \
+    #FIX ADD for dumping
+    && mkdir -p /squid/var/cache/squid
 
     
-    
-COPY squid.conf /etc/squid3/squid.conf
+#FIX to squid    
+COPY squid.conf /etc/squid/squid.conf
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
 COPY start_squid.sh /usr/local/bin/start_squid.sh
 
-VOLUME /var/spool/squid3 /etc/squid3/ssl_cert
+#FIX to squid
+VOLUME /var/spool/squid /etc/squid/ssl_cert
 EXPOSE 3128 3129 3130
 
 CMD ["/usr/local/bin/start_squid.sh"]

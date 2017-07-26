@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function gen-cert() {
-    pushd /etc/squid3/ssl_cert > /dev/null
+    pushd /etc/squid/ssl_cert > /dev/null
     if [ ! -f ca.pem ]; then
         openssl req -new -newkey rsa:2048 -sha256 -days 365 -nodes \
             -x509 -keyout privkey.pem -out ca.pem \
@@ -17,8 +17,9 @@ function gen-cert() {
     # e.g. GET http://docker-proxy:3128/squid-internal-static/icons/ca.pem
 
     #FIX add mkdir -p
-    mkdir -p /usr/share/squid3/icons/
-    cp `pwd`/ca.* /usr/share/squid3/icons/
+    #FIX to squid
+    mkdir -p /usr/share/squid/icons/
+    cp `pwd`/ca.* /usr/share/squid/icons/
     popd > /dev/null
     return $?
 }
@@ -35,8 +36,9 @@ function start-routing() {
 function init-cache() {
     # Make sure our cache is setup
     touch /var/log/squid/access.log /var/log/squid/cache.log
-    chown proxy.proxy -R /var/spool/squid3 /var/log/squid
-    [ -e /var/spool/squid3/swap.state ] || squid3 -z 2>/dev/null
+    #FIX to squid
+    chown proxy.proxy -R /var/spool/squid /var/log/squid
+    [ -e /var/spool/squid/swap.state ] || squid3 -z 2>/dev/null
 }
 
 gen-cert || exit 1
