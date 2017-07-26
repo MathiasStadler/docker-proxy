@@ -1,0 +1,102 @@
+
+acl localhost src 127.0.0.1/32 
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32 
+
+# from here
+# https://github.com/dani87/sslbump/blob/master/sslbump.sh
+acl localnet src 10.0.0.0/8     # RFC1918 possible internal network
+acl localnet src 172.16.0.0/12  # RFC1918 possible internal network
+#acl localnet src 192.168.0.0/16 # RFC1918 possible internal network
+acl localnet src 192.168.178.0/24 # RFC1918 possible internal network
+acl localnet src fc00::/7       # RFC 4193 local private network range
+acl localnet src fe80::/10 # RFC 4291 link-local (directly plugged) machines
+
+
+
+acl SSL_ports port 443
+acl Safe_ports port 80		# http
+acl Safe_ports port 21		# ftp
+acl Safe_ports port 443		# https
+acl Safe_ports port 70		# gopher
+acl Safe_ports port 210		# wais
+acl Safe_ports port 1025-65535	# unregistered ports
+acl Safe_ports port 280		# http-mgmt
+acl Safe_ports port 488		# gss-http
+acl Safe_ports port 591		# filemaker
+acl Safe_ports port 777		# multiling http
+
+acl CONNECT method CONNECT
+
+acl NO-CACHE-SITES dstdomain "/etc/squid/not-to-cache-sites.txt"
+no_cache deny NO-CACHE-SITES
+
+
+http_access deny !Safe_ports
+http_access deny CONNECT !SSL_ports
+http_access allow localhost manager
+http_access allow localnet manager
+http_access deny manager
+http_access allow localnet
+http_access allow localhost
+#http_access allow all
+http_access deny all
+ssl_bump server-first all
+
+# Port 3128 is the HTTP Forwarding port, which allows for serving of error pages
+# and icons, and in our case, the local CA cert. The other ports are used to
+# intercept regular traffic and cache responses using firewall rules (listed
+# elsewhere).
+
+
+
+#from here
+# https://serverfault.com/questions/371850/centos-6-squid-proxy-error 
+# last entry
+http_port 3128
+# http_port 3128 accel vhost allow-direct
+
+
+http_port 3129 intercept
+https_port 3130 cert=/etc/squid3/ssl_cert/ca.pem key=/etc/squid3/ssl_cert/privkey.pem generate-host-certificates=on intercept ssl-bump
+
+# Add sslcrtd config incase server is used in a busy environment this will be bumped
+# see here too http://wiki.squid-cache.org/Features/DynamicSslCert
+sslcrtd_program /lib/squid/ssl_crtd -s /var/cache/squid/ssl_db -M 4MB 
+sslcrtd_children 5
+
+
+maximum_object_size 512 MB
+cache_dir aufs /var/spool/squid3 2024 2 8
+cache_mem 200 MB
+maximum_object_size_in_memory 100 MB
+cache_replacement_policy heap LFUDA
+
+refresh_pattern Packages\.bz2$ 0       20%     4320 refresh-ims
+refresh_pattern Sources\.bz2$  0       20%     4320 refresh-ims
+refresh_pattern Release\.gpg$  0       20%     4320 refresh-ims
+refresh_pattern Release$       0       20%     4320 refresh-ims
+refresh_pattern -i .(udeb|tar.gz|deb|rpm|exe|zip|tar|tgz|bz2|ram|rar|bin)$  129600 100% 129600 override-expire ignore-no-cache ignore-no-store
+refresh_pattern -i .(jar|pom)$  129600 100% 129600 override-expire ignore-no-cache ignore-no-store ignore-must-revalidate
+refresh_pattern .              0       20%     4320
+
+#from here
+# http://www.linuxquestions.org/questions/linux-server-73/the-system-returned-104-connection-reset-by-peer-4175425038/
+# http://ranjithrajaram.blogspot.de/2012/08/dishtvin-is-not-accessible-via-squid.html
+via off
+forwarded_for delete
+
+#debug_options ALL,1 33,2 28,9
+#from here
+#https://serversupportforum.de/forum/sonstige-serverdienste/36770-logformat-vom-squid.html
+logformat  lesbar %{%d.%m %H:%M:%S}tl  %>a %Ss %ru
+access_log  /var/log/squid3/access.log lesbar
+#debug_options ALL,1 33,2 28,9
+
+
+#from here
+#https://easyengine.io/tutorials/nginx/upstream-cache-status-in-access-log/
+#log_format rt_cache '$remote_addr - $upstream_cache_status [$time_local]  '
+                    '"$request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
+
+#access_log   /var/log/nginx/example.com.access.log rt_cache;

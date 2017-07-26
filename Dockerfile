@@ -31,7 +31,10 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
         lintian \
         logrotate \
         libdbi-perl \
-        iproute2
+        iproute2 \
+        #required for 
+        #dpkg-gencontrol: warning: File::FcntlLock not available; using flock which is not NFS-safe
+        libfile-fcntllock-perl
     
     RUN cat /etc/apt/sources.list \ 
     #from here
