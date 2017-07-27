@@ -111,8 +111,8 @@ RUN  ls -la \
     && mkdir -p /var/cache/squid \
     && touch /var/cache/squid/ssl_db \
     #FIX ADD for dumping
-    && mkdir -p /squid/var/cache/squid
-
+    && mkdir -p /var/cache/squid \
+    && chown -R proxy:proxy /var/cache/squid 
     
 #FIX to squid    
 COPY squid.conf /etc/squid/squid.conf

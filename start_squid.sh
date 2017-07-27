@@ -28,8 +28,9 @@ function start-routing() {
     # Setup the NAT rule that enables transparent proxying
     IPADDR=$(/sbin/ip -o -f inet addr show eth0 | awk '{ sub(/\/.+/,"",$4); print $4 }')
     echo "IPADDR (start_squid.sh)=>  ${IPADDR}"
-    iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
-    iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination ${IPADDR}:3130
+    # iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
+   # iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
+   # iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination ${IPADDR}:3130
     return $?
 }
 
@@ -44,6 +45,6 @@ function init-cache() {
 gen-cert || exit 1
 start-routing || exit 1
 init-cache
-
-squid3
+#squid -z
+squid
 tail -f /var/log/squid/access.log /var/log/squid/cache.log

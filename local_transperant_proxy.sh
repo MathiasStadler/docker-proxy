@@ -22,8 +22,8 @@ iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --gid-owner $gid -j ACCEPT
 iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination $SQUIDIP:3128
 
 
-iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --gid-owner $gid -j ACCEPT
-iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $SQUIDIP:3130
+#iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --gid-owner $gid -j ACCEPT
+#iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination $SQUIDIP:3130
 
 #from here http://www.squid-cache.org/mail-archive/squid-users/200707/0712.html
 #iptables -t nat -A OUTPUT -o $INTERNET_DEVICE -p tcp --dport 80 \
