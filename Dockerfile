@@ -84,7 +84,7 @@ RUN ls -la \
     && cat debian/rules \
     #from here fix patch
     #http://www.markusbe.de/2009/12/wie-man-einen-patch-anwendet-und-hunk-failed-cant-find-file-to-patch-und-andere-loest/#hunk-failed
-    #&& patch -p1 < /root/squid3.patch \
+    && patch -p1 < /root/squid3.patch \
     #&& patch -Np1 --ignore-whitespace < /root/squid3.patch \
     && export NUM_PROCS=`grep -c ^processor /proc/cpuinfo` \
     

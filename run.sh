@@ -55,6 +55,7 @@ CID=$(sudo docker run --privileged -d \
         --volume="${CACHEDIR}":/var/spool/squid \
         --volume="${CERTDIR}":/etc/squid/ssl_cert \
         --publish=3128:3128 \
+        --publish=3129:3129 \
         --publish=3130:3130 \
         ${CONTAINER_NAME})
 }
