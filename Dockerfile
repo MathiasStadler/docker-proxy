@@ -71,6 +71,19 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
     && ls -la /var/lib/update-notifier/package-data-downloads/ \
     && apt-get build-dep -y squid3 squid-langpack
 
+
+
+#create openssl.conf
+RUN touch /etc/ssl/opensll.cnf \
+#from here
+#http://wiki.squid-cache.org/ConfigExamples/Intercept/SslBumpExplicit
+&& cat  << 'EOF' >/etc/ssl/openssl.cnf
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+[ v3_ca ]
+keyUsage = cRLSign, keyCertSign
+EOF 
 # Customise and build Squid.
 # It's silly, but run dpkg-buildpackage again if it fails the first time. This
 # is needed because sometimes the `configure` script is busy when building in
