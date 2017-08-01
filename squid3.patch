@@ -1,12 +1,10 @@
 --- a/debian/rules	2017-06-02 22:36:55.000000000 +0000
 +++ b/debian/rules	2017-07-31 15:18:51.329588639 +0000
-@@ -46,6 +46,10 @@
+@@ -46,6 +46,8 @@
  		--with-pidfile=/var/run/squid.pid \
  		--with-filedescriptors=65536 \
  		--with-large-files \
-+		--enable-ssl \
-+		--with-openssl=/etc/ssl/openssl.cnf \
-+		--enable-openssl \
++		--with-openssl  \
 +		--enable-ssl-crtd \
  		--with-default-user=proxy
  

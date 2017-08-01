@@ -115,32 +115,12 @@ RUN  ls -la \
     && mkdir -p /etc/squid/ssl_cert \
     && mkdir -p /usr/share/squid \
     && cat /root/mime.conf >> /usr/share/squid/mime.conf \
-    
     && mkdir -p /var/cache/squid \
     && touch /var/cache/squid/ssl_db \
     #FIX ADD for dumping
     && mkdir -p /var/cache/squid \
-    && chown -R proxy:proxy /var/cache/squid  \
-    #TODO check again is /var/cache/squid in used 
-   && mkdir -p /squid/var/cache/squid \
-   && mkdir -p /squid/var/cache/squid \
-   && chown -R proxy:proxy /squid/var/cache/squid 
-
-
-
-
-# RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
-#      && apt-get purge -y  \
-#         debhelper/xenial-backports \
-#         dh-make \ 
-#         quilt \ 
-#         fakeroot \
-#         lintian \
-#         logrotate \
-#         libdbi-perl \
-#         iproute2 
-
-
+    && chown -R proxy:proxy /var/cache/squid 
+    
 #FIX to squid    
 COPY squid.conf /etc/squid/squid.conf
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
