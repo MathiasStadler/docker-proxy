@@ -50,16 +50,23 @@ terminated () {
 
 
 start (){
+
+#FIX /var/spool/squid to   /var/cache/squid
 CID=$(sudo docker run --privileged -d \
         --name ${CONTAINER_NAME} \
-        --volume="${CACHEDIR}":/var/spool/squid \
+        --volume="${CACHEDIR}":/var/cache/squid \
         --volume="${CERTDIR}":/etc/squid/ssl_cert \
         --publish=3128:3128 \
         --publish=3129:3129 \
         --publish=3130:3130 \
 --net host \
         ${CONTAINER_NAME})
+
+#ADD write for convienience  
+echo "${CID}" >./currentSquidContainer.id
+
 }
+
 
 
 start1 () {

@@ -2,6 +2,7 @@
 #update to
 FROM ubuntu:latest
 
+ENV DH_VERBOSE=1 
 
 MAINTAINER Kevin Littlejohn <kevin@littlejohn.id.au>, \
     Alex Fraser <alex@vpac-innovations.com.au>
@@ -16,6 +17,7 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
         dpkg-dev \
         iptables \
         libssl-dev \
+        wget \
         patch \
         squid-langpack \
         ssl-cert \
@@ -72,6 +74,15 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
     && apt-get build-dep -y squid3 squid-langpack
 
 
+#install debian openssl 
+#why see here
+#Error SSL_ERROR_RX_RECORD_TOO_LONG
+#http://squid-web-proxy-cache.1019090.n4.nabble.com/Squid-with-SSL-Bump-on-Debian-testing-SSL-ERROR-RX-RECORD-TOO-LONG-td4681683.html
+
+
+
+
+
 
 #create openssl.conf
 RUN touch /etc/ssl/opensll.cnf \
@@ -124,7 +135,20 @@ RUN  ls -la \
     #TODO check again is /var/cache/squid in used 
    && mkdir -p /squid/var/cache/squid \
    && mkdir -p /squid/var/cache/squid \
-   && chown -R proxy:proxy /squid/var/cache/squid 
+   && chown -R proxy:proxy /squid/var/cache/squid  
+   # /usr/local/squid/etc/
+   # && mkdir -p /usr/local/squid/etc/ \
+   # && touch 
+
+
+#TODO  ADD would not work why ??
+RUN wget http://ftp.openssl.org/source/openssl-1.0.2l.tar.gz \
+&&  tar -xzf openssl-1.0.2l.tar.gz  \   
+&& cd openssl* \
+&& ./config  --prefix=/usr --libdir=lib --openssldir=/etc/ssl shared zlib-dynamic  \
+&& make \
+&& make test \
+&& make install
 
 
 

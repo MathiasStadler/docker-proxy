@@ -1,6 +1,11 @@
 #!/bin/bash
 
 function gen-cert() {
+
+#used openssl instead of libressl
+# from here
+# http://squid-web-proxy-cache.1019090.n4.nabble.com/Squid-with-SSL-Bump-on-Debian-testing-SSL-ERROR-RX-RECORD-TOO-LONG-td4681683.html
+
     #FIX squid3 to squid 
     pushd /etc/squid/ssl_cert > /dev/null
     if [ ! -f ca.pem ]; then
@@ -10,10 +15,7 @@ function gen-cert() {
         chown proxy.proxy privkey.pem
         chmod 600 privkey.pem
         openssl x509 -in ca.pem -outform DER -out ca.der
-        #ad cert
-        openssl req -new -newkey rsa:1024 -days 1365 -nodes -x509 -keyout myca.pem -out myCA.pem
-        chown proxy.proxy  myCA.pem
-    else
+     else
         echo "Reusing existing certificate"
     fi
     openssl x509 -sha1 -in ca.pem -noout -fingerprint
