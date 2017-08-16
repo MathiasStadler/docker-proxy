@@ -58,7 +58,7 @@ jang.com.pk ```
 - ``` docker cp $(cat currentSquidContainer.id):/etc/squid/ssl_cert/ca.der . ```
 
 - delete old cert new are create than by the next start
-- ```docker cp $(cat currentSquidContainer.id):/etc/squid/ssl_cert/ca.der .```
+- ```docker exec -it  $(cat currentSquidContainer.id) rm /etc/squid/ssl_cert/ca.pem```
 
 
 # debug openssl

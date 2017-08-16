@@ -10,7 +10,7 @@ function gen-cert() {
     pushd /etc/squid/ssl_cert > /dev/null
     if [ ! -f ca.pem ]; then
         openssl req -new -newkey rsa:2048 -sha256 -days 365 -nodes \
-            -x509 -keyout privkey.pem -out ca.pem \
+            -x509 -extensions v3_ca -keyout privkey.pem -out ca.pem \
             -subj '/CN=docker-proxy/O=NULL/C=AU'
         chown proxy.proxy privkey.pem
         chmod 600 privkey.pem
