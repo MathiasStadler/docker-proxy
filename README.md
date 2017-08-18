@@ -53,9 +53,9 @@ jang.com.pk ```
 
 
 # helps
-- ``` docker exec -it $(cat currentSquidContainer.id) /bin/bash```
+- ```docker exec -it $(cat currentSquidContainer.id) /bin/bash```
 
-- ``` docker cp $(cat currentSquidContainer.id):/etc/squid/ssl_cert/ca.der . ```
+- ```docker cp $(cat currentSquidContainer.id):/etc/squid/ssl_cert/ca.der . ```
 
 - delete old cert new are create than by the next start
 - ```docker exec -it  $(cat currentSquidContainer.id) rm /etc/squid/ssl_cert/ca.pem```
@@ -70,5 +70,10 @@ jang.com.pk ```
     SL_ERROR_RX_RECORD_TOO_LONG -12263 "SSL received a record that exceeded the maximum permissible length." This generally indicates that the remote peer system has a flawed implementation of SSL, and is violating the SSL specification. ```
 * self signed cert wit current names   
 * ```https://stackoverflow.com/questions/10175812/how-to-create-a-self-signed-certificate-with-openssl/27931596#27931596```
+
+
+- view content of cert
+- ```openssl x509 -in ca.pem -text```
+
 
 

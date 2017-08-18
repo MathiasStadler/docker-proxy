@@ -9,7 +9,7 @@ function gen-cert() {
     #FIX squid3 to squid 
     pushd /etc/squid/ssl_cert > /dev/null
     if [ ! -f ca.pem ]; then
-        openssl req -new -newkey rsa:2048 -sha256 -days 365 -nodes \
+        openssl req -config /usr/local/bin/self-signed-cert.conf -new -newkey rsa:2048 -sha256 -days 365 -nodes \
             -x509 -extensions v3_ca -keyout privkey.pem -out ca.pem \
             -subj '/CN=docker-proxy/O=NULL/C=AU'
         chown proxy.proxy privkey.pem

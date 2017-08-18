@@ -169,6 +169,7 @@ RUN wget http://ftp.openssl.org/source/openssl-1.0.2l.tar.gz \
 COPY squid.conf /etc/squid/squid.conf
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
 COPY start_squid.sh /usr/local/bin/start_squid.sh
+COPY self-signed-cert.conf /usr/local/bin/self-signed-cert.conf
 
 #FIX to squid
 VOLUME /var/spool/squid /etc/squid/ssl_cert

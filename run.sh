@@ -59,7 +59,8 @@ CID=$(sudo docker run --privileged -d \
         --publish=3128:3128 \
         --publish=3129:3129 \
         --publish=3130:3130 \
---net host \
+        --net host \
+        --hostname ${CONTAINER_NAME} \
         ${CONTAINER_NAME})
 
 #ADD write for convienience  
