@@ -4,5 +4,6 @@
 **/*pem
 **/*crt
 **/*id
+data/*
 *id
 currentContainerIpAddr.txt
