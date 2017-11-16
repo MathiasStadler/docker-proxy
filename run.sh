@@ -6,9 +6,10 @@
 # TODO DONE would you stop a running container
 # TODO is port 53 free eg is used from dnsmasq
 
-CACHEDIR=${CACHEDIR:-/var/lib/docker-proxy/cache}
-CERTDIR=${CERTDIR:-/var/lib/docker-proxy/ssl}
+CACHEDIR=${CACHEDIR:-${PWD}/data/cache}
+CERTDIR=${CERTDIR:-${PWD}/data/ssl}
 CONTAINER_NAME=${CONTAINER_NAME:-docker-proxy}
+CONFDIR=${CONFDIR:-${PWD}}
 
 
 #set env
@@ -291,17 +292,18 @@ runContainer() {
  #       "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
 
-     CID=$(sudo docker run --privileged -d \
+     CID=$(sudo docker run -d \
         --name ${CONTAINER_NAME} \
-        --volume="${CACHEDIR}":/var/cache/squid \
-        --volume="${CERTDIR}":/etc/squid/ssl_cert \
+        --volume="${CACHEDIR}":/var/cache/squid:rw \
+        --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
+        --volume="${CONFDIR}":/var/local/squid:ro \
         --hostname ${CONTAINER_NAME} \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")   
 
 IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${CID})
 
 
-echo ${IPADDR} >currrnContainerIpAddr.txt
+echo ${IPADDR} >currentContainerIpAddr.txt
 #start_routing
 
 

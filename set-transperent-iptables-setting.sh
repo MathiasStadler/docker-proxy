@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 #iptables hints from here
 #https://www.digitalocean.com/community/tutorials/how-to-list-and-delete-iptables-firewall-rules
 ##iptables -t nat -A PREROUTING -p tcp -s 192.168.178.0/24 --dport 80 -j DNAT --to 192.168.178.32:3128
@@ -38,17 +40,25 @@
 #http://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxRedirect
 
 # your proxy IP
-SQUIDIP=192.168.178.32
+SQUIDIP=$(cat currentContainerIpAddr.txt)
 
 # your proxy listening port
-SQUIDPORT=3128
+#SQUIDPORT=3128
+
+HTTP_PROXY_PORT=3129
+HTTP_PORT=80
+HTTPS_PROXY_PORT=
+HTTPS_PPORT=443
 
 
-iptables -t nat -A PREROUTING -s $SQUIDIP -p tcp --dport 80 -j ACCEPT
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port $SQUIDPORT
-iptables -t nat -A POSTROUTING -j MASQUERADE
-iptables -t mangle -A PREROUTING -p tcp --dport $SQUIDPORT -j DROP
+#iptables -t nat -A PREROUTING -s $SQUIDIP -p tcp --dport 80 -j ACCEPT
+#iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port $SQUIDPORT
+#iptables -t nat -A POSTROUTING -j MASQUERADE
+#iptables -t mangle -A PREROUTING -p tcp --dport $SQUIDPORT -j DROP
 
 
 #mark all packet
-iptables -t mangle -I PREROUTING -p tcp -i eno1 ! -s 192.168.178.32 -j MARK --set-mark 1 --dport 80
+#iptables -t mangle -I PREROUTING -p tcp -i eno1 ! -s 192.168.178.32 -j MARK --set-mark 1 --dport 80
+
+
+iptables -t nat -A OUTPUT -p tcp --dport ${HTTP_PORT} -j DNAT --to ${IPADDR}:${HTTP_PROXY_PORT}

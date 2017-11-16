@@ -166,13 +166,22 @@ RUN wget http://ftp.openssl.org/source/openssl-1.0.2l.tar.gz \
 
 
 #FIX to squid    
-COPY squid.conf /etc/squid/squid.conf
+#COPY squid.conf /etc/squid/squid.conf
+
+RUN mkdir -p /var/local/squid
 COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
+
+#start script of container
 COPY start_squid.sh /usr/local/bin/start_squid.sh
+
+
 COPY self-signed-cert.conf /usr/local/bin/self-signed-cert.conf
 
 #FIX to squid
 VOLUME /var/spool/squid /etc/squid/ssl_cert
 EXPOSE 3128 3129 3130
+
+
+RUN rm -rf /etc/squid/squid.conf
 
 CMD ["/usr/local/bin/start_squid.sh"]

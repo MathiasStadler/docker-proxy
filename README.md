@@ -77,3 +77,9 @@ jang.com.pk ```
 
 
 
+# ERROS
+ -  TCP_SWAPFAIL_MISS are when Squid thought it had an object in it's cache
+but failed to read it. Squid then falls back on processing the request
+as a cache miss.
+
+ - Are you running squid-2.3 with asyncufs? 
