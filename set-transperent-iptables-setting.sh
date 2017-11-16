@@ -40,15 +40,15 @@
 #http://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxRedirect
 
 # your proxy IP
-SQUIDIP=$(cat currentContainerIpAddr.txt)
+IPADDR=$(cat currentContainerIpAddr.txt)
 
 # your proxy listening port
 #SQUIDPORT=3128
 
 HTTP_PROXY_PORT=3129
 HTTP_PORT=80
-HTTPS_PROXY_PORT=
-HTTPS_PPORT=443
+HTTPS_PROXY_PORT=3130
+HTTPS_PORT=443
 
 
 #iptables -t nat -A PREROUTING -s $SQUIDIP -p tcp --dport 80 -j ACCEPT
@@ -61,4 +61,18 @@ HTTPS_PPORT=443
 #iptables -t mangle -I PREROUTING -p tcp -i eno1 ! -s 192.168.178.32 -j MARK --set-mark 1 --dport 80
 
 
-iptables -t nat -A OUTPUT -p tcp --dport ${HTTP_PORT} -j DNAT --to ${IPADDR}:${HTTP_PROXY_PORT}
+#DNAT vs REDIRECT
+# http://squid-web-proxy-cache.1019090.n4.nabble.com/Intercepting-with-iptables-DNAT-vs-REDIRECT-td4662783.html
+
+iptables -t nat -A OUTPUT ! -s ${IPADDR}  -p tcp --dport ${HTTP_PORT} -j DNAT --to ${IPADDR}:${HTTP_PROXY_PORT}
+#iptables -t nat -A OUTPUT -p tcp --dport ${HTTPS_PORT} -j DNAT --to ${IPADDR}:${HTTPS_PROXY_PORT}
+
+iptables -t nat -A POSTROUTING -j MASQUERADE
+
+#iptables -t nat  -L OUTPUT -n --line-numbers
+sudo iptables -t nat  -L  -n -v  --line-numbers
+
+
+
+#delete
+#sudo iptables -t nat -D PREROUTING  1

@@ -207,13 +207,13 @@ checkRunningContainerAndStop() {
 copyConfigFileForBuild(){
 
 #copy default scripts
-cp  squid-config/mime.conf current
-cp squid-config/squid.conf current
+cp squid-config/mime.conf current
+#TODO old cp squid-config/squid.conf current
 cp squid-config/start_squid.sh current
 
 #copy customer settings
-cp not-to-cache-sites.txt current
-cp self-signed-cert.conf current
+cp squid-config/not-to-cache-sites.txt current
+cp squid-config/self-signed-cert.conf current
 
 }
 

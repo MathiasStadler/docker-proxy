@@ -42,14 +42,18 @@ function init-cache() {
     touch /var/log/squid/access.log /var/log/squid/cache.log
     #FIX to squid
     chown proxy.proxy -R /var/spool/squid /var/log/squid
-    chmod 0777 /var/cache/squid
     [ -e /var/spool/squid/swap.state ] || squid3 -z 2>/dev/null
 }
 
 gen-cert || exit 1
 start-routing || exit 1
 init-cache
+#squid -z
 /usr/lib/squid/ssl_crtd -c -s /var/lib/ssl_db
 chown -R proxy.proxy /var/lib/ssl_db
+#check config
+squid -k parse -f /var/local/squid/squid.conf || exit 1
+# start squid
 squid -f /var/local/squid/squid.conf
+#show log on console
 tail -f /var/log/squid/access.log /var/log/squid/cache.log

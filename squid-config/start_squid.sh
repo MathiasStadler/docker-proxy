@@ -51,5 +51,9 @@ init-cache
 #squid -z
 /usr/lib/squid/ssl_crtd -c -s /var/lib/ssl_db
 chown -R proxy.proxy /var/lib/ssl_db
-squid
+#check config
+squid -k parse -f /var/local/squid/squid.conf || exit 1
+# start squid
+squid -f /var/local/squid/squid.conf
+#show log on console
 tail -f /var/log/squid/access.log /var/log/squid/cache.log

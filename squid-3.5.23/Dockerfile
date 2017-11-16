@@ -169,7 +169,7 @@ RUN wget http://ftp.openssl.org/source/openssl-1.0.2l.tar.gz \
 #COPY squid.conf /etc/squid/squid.conf
 
 RUN mkdir -p /var/local/squid
-COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
+#COPY not-to-cache-sites.txt /etc/squid/not-to-cache-sites.txt
 
 #start script of container
 COPY start_squid.sh /usr/local/bin/start_squid.sh
