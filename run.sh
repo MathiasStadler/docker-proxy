@@ -10,6 +10,7 @@ CACHEDIR=${CACHEDIR:-${PWD}/data/cache}
 CERTDIR=${CERTDIR:-${PWD}/data/ssl}
 CONTAINER_NAME=${CONTAINER_NAME:-docker-proxy}
 CONFDIR=${CONFDIR:-${PWD}}
+LOGDIR=${LOGDIR:-${PWD}/log}
 
 
 #set env
@@ -297,6 +298,7 @@ runContainer() {
         --volume="${CACHEDIR}":/var/cache/squid:rw \
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
         --volume="${CONFDIR}":/var/local/squid:ro \
+        --volume="${LOGDIR}":/var/log/squid:rw \
         --hostname ${CONTAINER_NAME} \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")   
 

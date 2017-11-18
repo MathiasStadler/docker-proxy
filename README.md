@@ -76,6 +76,9 @@ jang.com.pk ```
 - ```openssl x509 -in ca.pem -text```
 
 
+# install ping 
+- apt-get update && apt-get install iputils-ping
+
 
 # ERROS
  -  TCP_SWAPFAIL_MISS are when Squid thought it had an object in it's cache
@@ -83,3 +86,87 @@ but failed to read it. Squid then falls back on processing the request
 as a cache miss.
 
  - Are you running squid-2.3 with asyncufs? 
+
+
+
+ - ERROR: No forward-proxy ports configured.
+    - https://wiki.squid-cache.org/KnowledgeBase/NoForwardProxyPorts
+    - no intercept port 
+    - http://www.squid-cache.org/mail-archive/squid-users/201202/0498.html
+
+
+- https://forum.ubuntuusers.de/topic/squid-3-und-docker-forwarding-loop-detected-fo/
+
+- no interce
+- 
+
+
+
+# docu iptables 
+- http://www.netfilter.org/documentation/index.html#HOWTO
+
+[iptables pkacket flow](http://www.easy-network.de/iptables.html)
+
+# CHECK IP-FORWARDING
+
+# docu
+- https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxDnat
+ 
+    - net.ipv4.ip_forward = 1
+    - cat /proc/sys/net/ipv4/ip_forward
+
+    - net.ipv4.conf.default.rp_filter=0
+    - cat /proc/sys/net/ipv4/conf/default/rp_filter
+
+ - 1 for enable
+
+#docu 
+https://www.linuxquestions.org/questions/linux-server-73/iptables-for-a-remote-transparent-proxy-946863/
+#dsl box
+
+# docu squid debgug code 
+http://etutorials.org/Server+Administration/Squid.+The+definitive+guide/Chapter+16.+Debugging+and+Troubleshooting/16.2+Debugging+via+cache.log/
+
+
+ # routing table
+ - ls -lh /etc/iproute2/rt_tables 
+ - cat  /etc/iproute2/rt_tables
+
+
+- list/show
+    - routing
+    - ```sudo ip route list```
+    - rules
+    - ```ip rule list```
+    - list of rules
+    - ```ip route show table main```
+
+- [doku](http://linux-ip.net/html/routing-tables.html)
+
+ - del 
+ - ```sudo ip route del default table TRANSDNS```
+
+
+
+test proxy 
+
+1) inside docker box
+- ./bash_container.sh
+- curl --proxy 127.0.0.1:3128 www.tagesschau.de  => TCP_MISS/200 or TCP_REFRESH_MODIFIED/200
+- curl --proxy 127.0.0.1:3128 https://www.heise.de  => TCP TUNNEL
+
+2) on host server
+- curl --proxy <IP FROM DOCKER CONTAINER>:3128 http://www.tagesschau.de
+- curl --proxy $(cat currentContainerIpAddr.txt):3128 http://www.tagesschau.de
+
+- e.g.
+- curl --proxy 172.17.0.2:3128 http://www.tagesschau.de  => TCP_MISS/200
+ -curl --proxy 172.17.0.2:3128 https://www.tagesschau.de  => TCP_TUNNEL <= proto https
+
+
+
+
+
+
+
+
