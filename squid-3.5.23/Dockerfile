@@ -141,9 +141,11 @@ RUN  ls -la \
    # && touch 
 
 
-#TODO  ADD would not work why ??
-RUN wget http://ftp.openssl.org/source/openssl-1.0.2l.tar.gz \
-&&  tar -xzf openssl-1.0.2l.tar.gz  \   
+# TODO  ADD would not work why ??
+# TODO detect last version of ftp server
+# TODO set openssl-1.0.2n.tar.gz as variable
+RUN wget http://ftp.openssl.org/source/openssl-1.0.2n.tar.gz \
+&&  tar -xzf openssl-1.0.2n.tar.gz  \   
 && cd openssl* \
 && ./config  --prefix=/usr --libdir=lib --openssldir=/etc/ssl shared zlib-dynamic  \
 && make \
