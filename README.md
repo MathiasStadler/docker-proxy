@@ -38,7 +38,7 @@ cache deny sharing_server
 - Now create the file which will contains our sites list which we don’t want to cache.
 
 ```bash
-> vi /etc/squid/not-to-cache-sites.txt
+vi /etc/squid/not-to-cache-sites.txt
 ```
 
 - add following or your entries
@@ -48,10 +48,10 @@ bankalhabib.com
 aacable.wordpress.com
 wordpress.com
 nae.com.pk
-jang.com.pk ```
+jang.com.pk
 ```
 
-- Special thanks go to Kevin Littlejohn 
+- Credits goes to Kevin Littlejohn
 
 ## helps
 
@@ -88,7 +88,7 @@ openssl s_client -connect 192.168.178.32:443 -state -debug
 - view content of cert
 - ```openssl x509 -in ca.pem -text```
 
-## install ping 
+## install pincurl -v -s -o  --proxy $(cat currentContainerIpAddr.txt):3128 https://www.heise.deg 
 - apt-get update && apt-get install iputils-ping
 
 
