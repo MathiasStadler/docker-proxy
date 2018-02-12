@@ -51,8 +51,8 @@ start_routing () {
   # Add a new route table that routes everything marked through the new container
   # workaround boot2docker issue #367
   # https://github.com/boot2docker/boot2docker/issues/367
-  
-  
+
+
   # SAVE start
   #[ -d /etc/iproute2 ] || sudo mkdir -p /etc/iproute2
   #if [ ! -e /etc/iproute2/rt_tables ]; then
@@ -67,19 +67,19 @@ start_routing () {
   #ip rule show | grep -q $ROUTINGTABLE \
   #  || sudo ip rule add from all fwmark 0x1 lookup $ROUTINGTABLE
   #sudo ip route add default via "${IPADDR}" dev docker0 table $ROUTINGTABLE
-  
+
   # SAVE end
   # Mark packets to port 80 and 443 external, so they route through the new
   # route table
-  
-  #SAVE org 
+
+  #SAVE org
   #COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
   #  -j MARK --set-mark 1"
-  
+
   COMMON_RULES="-t nat -A OUTPUT -p udp --dport ${DNS_PORT} -j DNAT --to ${IPADDR}:${DNS_PROXY_PORT}"
   echo "Redirecting DNS to docker-"
-  sudo iptables $COMMON_RULES 
-   
+  sudo iptables "$COMMON_RULES"
+
    #TODO OLD start
    # if [ "$WITH_SSL" = 'yes' ]; then
    #   echo "Redirecting DNS to $CONTAINER_NAME"
@@ -88,7 +88,7 @@ start_routing () {
   #    echo "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
   #    echo "CA certificate will be generated anyway, but it won't be used"
   # fi
-  
+
   # TODO OLD end
   # Exemption rule to stop docker from masquerading traffic routed to the
   # transparent proxy
@@ -98,8 +98,8 @@ start_routing () {
 stop_routing () {
     # Remove iptables rules.
     set +e
-    ip route show table $ROUTINGTABLE | grep -q default \
-        && sudo ip route del default table $ROUTINGTABLE
+    ip route show table "$ROUTINGTABLE" | grep -q default \
+        && sudo ip route del default table "$ROUTINGTABLE"
     while true; do
         #SAVE org
         #rule_num=$(sudo iptables -t mangle -L PREROUTING -n --line-numbers \
@@ -110,7 +110,7 @@ stop_routing () {
            rule_num=$(sudo iptables -t nat -L OUTPUT -n --line-numbers \
             | grep -E "${IPADDR}:${DNS_PROXY_PORT}" \
             | awk '{print $1}' \
-            | head -n1) 
+            | head -n1)
         [ -z "$rule_num" ] && break
         #SAVE org
         #sudo iptables -t mangle -D PREROUTING "$rule_num"
@@ -132,7 +132,7 @@ showAllUsedPort() {
 createRemoteKeys() {
 
     echo "delete keys..."
-    rm -rf *key *pem
+    rm -rf ./*key ./*pem
     echo "create new keys..."
     if "$(pwd)"/unbound-control-setup.sh -d ${SERVER_KEYS_DIR} >/tmp/${OUTPUT_UNBOND_CONTROL_SETUP}; then
         echo "Keys generated...OK"
@@ -282,7 +282,7 @@ runContainer() {
     echo "run container ..."
     echo "Used ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} to start new ${CONTAINER_NAME} container"
     #start container
- #TODO old 
+ #TODO old
  #   CID=$(docker run --name "${CONTAINER_NAME}" -d \
  #       -v "$(pwd)"/a-records.conf:/opt/unbound/etc/unbound/a-records.conf:ro \
  #       -v "$(pwd)"/root.hints:/opt/unbound/etc/unbound/root.hints:ro \
@@ -294,24 +294,24 @@ runContainer() {
 
 
      CID=$(sudo docker run -d \
-        --name ${CONTAINER_NAME} \
+        --name "${CONTAINER_NAME}" \
         --volume="${CACHEDIR}":/var/cache/squid:rw \
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
         --volume="${CONFDIR}":/var/local/squid:ro \
         --volume="${LOGDIR}":/var/log/squid:rw \
-        --hostname ${CONTAINER_NAME} \
-        "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")   
+        --hostname "${CONTAINER_NAME}" \
+        "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${CID})
+IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
 
 
-echo ${IPADDR} >currentContainerIpAddr.txt
+echo "${IPADDR}" >currentContainerIpAddr.txt
 #start_routing
 
 
 
     #only for convenience see README.md
-    echo ${CID} >currentContainer.id
+    echo "${CID}" >currentContainer.id
 
     #give docker few seconds
     sleep 2
@@ -346,8 +346,8 @@ terminated() {
     kill -TERM $$
 }
 
-run() {
-    echo "... run "
+main() {
+    echo "run"
     # TODO old
     #checkKeysForRemoteControl
     checkRunningContainerAndStop
@@ -364,5 +364,5 @@ run() {
 
 }
 
-run
+main
 echo
