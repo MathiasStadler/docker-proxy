@@ -4,7 +4,10 @@
 **/*pem
 **/*crt
 **/*id
-data/*
+**/*der
+data/**/*
 *id
 currentContainerIpAddr.txt
 log/*
+
+**/*pcap
