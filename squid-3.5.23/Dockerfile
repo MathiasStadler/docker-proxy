@@ -48,8 +48,6 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
 && chmod 777 /var/lib/update-notifier/package-data-downloads/partial/ \
 && ls -la /var/lib/update-notifier/package-data-downloads/ \
 && chmod 777 /root \
-
-
 #from here 
 # http://ccm.net/faq/809-debian-apt-get-no-pubkey-gpg-error
     && gpg --keyserver pgpkeys.mit.edu --recv-key  8B48AD6246925553   \
@@ -105,7 +103,6 @@ RUN ls -la \
     && patch -p1 < /root/squid3.patch \
     #&& patch -Np1 --ignore-whitespace < /root/squid3.patch \
     && export NUM_PROCS=`grep -c ^processor /proc/cpuinfo` \
-    
     #&& (dpkg-buildpackage -b -j${NUM_PROCS} \
     #    || dpkg-buildpackage -b -j${NUM_PROCS}) \
     # change to without sign in
@@ -126,7 +123,6 @@ RUN  ls -la \
     && mkdir -p /etc/squid/ssl_cert \
     && mkdir -p /usr/share/squid \
     && cat /root/mime.conf >> /usr/share/squid/mime.conf \
-    
     && mkdir -p /var/cache/squid \
     && touch /var/cache/squid/ssl_db \
     #FIX ADD for dumping

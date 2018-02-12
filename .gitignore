@@ -9,3 +9,6 @@ data/*
 *id
 currentContainerIpAddr.txt
 log/*
+**/*pcap
+
+**/*data
