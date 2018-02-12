@@ -165,6 +165,24 @@ test proxy
 
 
 
+curl --proxy $(cat currentContainerIpAddr.txt):3128 http://www.tagesschau.de
+curl --proxy $(cat currentContainerIpAddr.txt):3128 https://www.heise.de
+
+curl -v -s -o - -X OPTIONS https://google.com
+
+curl -v -s -o - -X OPTIONS -proxy $(cat currentContainerIpAddr.txt):3128 https://google.com
+
+curl -v -s -o - -X OPTIONS --proxy $(cat currentContainerIpAddr.txt):3128 https://www.heise.de
+
+
+funzt:
+sudo ./clean-iptables.sh
+sudo ./set-transperent-iptables-setting_2.sh
+
+
+
+
+
 
 
 

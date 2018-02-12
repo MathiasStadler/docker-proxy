@@ -2,7 +2,7 @@
 SQUIDIP=$(cat currentContainerIpAddr.txt)
 
 # your proxy listening port
-SQUIDPORT=3129
+SQUIDPORT=3128
 
 
 iptables -t nat -A PREROUTING -s $SQUIDIP -p tcp --dport 80 -j ACCEPT

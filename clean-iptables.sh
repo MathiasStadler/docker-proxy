@@ -7,3 +7,4 @@ iptables -t nat -X
 iptables -t mangle -F
 iptables -t mangle -X
 
+iptables -t nat  -L  -n -v --line-numbers

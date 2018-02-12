@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 #from here
 #https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxDnat
