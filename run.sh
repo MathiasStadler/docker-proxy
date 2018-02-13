@@ -1,9 +1,7 @@
 #!/bin/bash
 
-#format with shfmt
+# format with shfmt
 
-# TODO DONE check container is running
-# TODO DONE would you stop a running container
 # TODO is port 53 free eg is used from dnsmasq
 
 CACHEDIR=${CACHEDIR:-${PWD}/data/cache}
@@ -11,7 +9,6 @@ CERTDIR=${CERTDIR:-${PWD}/data/ssl}
 CONTAINER_NAME=${CONTAINER_NAME:-docker-proxy}
 CONFDIR=${CONFDIR:-${PWD}}
 LOGDIR=${LOGDIR:-${PWD}/log}
-
 
 #set env
 GIT_OWNER_NAME=$(git config user.name | tr '[:upper:]' '[:lower:]')
@@ -23,9 +20,8 @@ TAG_NAME=${TAG_NAME:-latest}
 SERVER_KEYS_DIR=unbound_control_keys
 OUTPUT_UNBOND_CONTROL_SETUP=output_unbound-control-setup.txt
 
-
-DNS_PORT=53
-DNS_PROXY_PORT=53
+# DNS_PORT=53
+# DNS_PROXY_PORT=53
 
 #getopt
 while getopts ":n" opt; do
@@ -44,84 +40,65 @@ done
 #exit on error
 set -e
 
+start_routing() {
+    # Add a new route table that routes everything marked through the new container
+    # workaround boot2docker issue #367
+    # https://github.com/boot2docker/boot2docker/issues/367
 
+    [ -d /etc/iproute2 ] || sudo mkdir -p /etc/iproute2
+    if [ ! -e /etc/iproute2/rt_tables ]; then
+        if [ -f /usr/local/etc/rt_tables ]; then
+            sudo ln -s /usr/local/etc/rt_tables /etc/iproute2/rt_tables
+        elif [ -f /usr/local/etc/iproute2/rt_tables ]; then
+            sudo ln -s /usr/local/etc/iproute2/rt_tables /etc/iproute2/rt_tables
+        fi
+    fi
+    ([ -e /etc/iproute2/rt_tables ] && grep -q "${ROUTINGTABLE}" /etc/iproute2/rt_tables) ||
+        sudo sh -c "echo '1	$ROUTINGTABLE' >> /etc/iproute2/rt_tables"
+    ip rule show | grep -q "{$ROUTINGTABLE}" ||
+        sudo ip rule add from all fwmark 0x1 lookup "${ROUTINGTABLE}"
+    sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
 
+    # Mark packets to port 80 and 443 external, so they route through the new
+    # route table
 
-start_routing () {
-  # Add a new route table that routes everything marked through the new container
-  # workaround boot2docker issue #367
-  # https://github.com/boot2docker/boot2docker/issues/367
+    COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
+      -j MARK --set-mark 1"
 
+    # TODO old dns aproach
+    #COMMON_RULES="-t nat -A OUTPUT -p udp --dport ${DNS_PORT} -j DNAT --to ${IPADDR}:${DNS_PROXY_PORT}"
+    #echo "Redirecting DNS to docker-"
 
-  # SAVE start
-  #[ -d /etc/iproute2 ] || sudo mkdir -p /etc/iproute2
-  #if [ ! -e /etc/iproute2/rt_tables ]; then
-  #  if [ -f /usr/local/etc/rt_tables ]; then
-  #    sudo ln -s /usr/local/etc/rt_tables /etc/iproute2/rt_tables
-  #  elif [ -f /usr/local/etc/iproute2/rt_tables ]; then
-  #    sudo ln -s /usr/local/etc/iproute2/rt_tables /etc/iproute2/rt_tables
-  #  fi
-  #fi
-  #([ -e /etc/iproute2/rt_tables ] && grep -q $ROUTINGTABLE /etc/iproute2/rt_tables) \
-  #  || sudo sh -c "echo '1	$ROUTINGTABLE' >> /etc/iproute2/rt_tables"
-  #ip rule show | grep -q $ROUTINGTABLE \
-  #  || sudo ip rule add from all fwmark 0x1 lookup $ROUTINGTABLE
-  #sudo ip route add default via "${IPADDR}" dev docker0 table $ROUTINGTABLE
+    sudo iptables "$COMMON_RULES"
 
-  # SAVE end
-  # Mark packets to port 80 and 443 external, so they route through the new
-  # route table
+    if [ "$WITH_SSL" = 'yes' ]; then
+        echo "Redirecting DNS to $CONTAINER_NAME"
+        sudo iptables "${COMMON_RULES}" --dport 443
+    else
+        echo "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
+        echo "CA certificate will be generated anyway, but it won't be used"
+    fi
 
-  #SAVE org
-  #COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
-  #  -j MARK --set-mark 1"
-
-  COMMON_RULES="-t nat -A OUTPUT -p udp --dport ${DNS_PORT} -j DNAT --to ${IPADDR}:${DNS_PROXY_PORT}"
-  echo "Redirecting DNS to docker-"
-  sudo iptables "$COMMON_RULES"
-
-   #TODO OLD start
-   # if [ "$WITH_SSL" = 'yes' ]; then
-   #   echo "Redirecting DNS to $CONTAINER_NAME"
-   #   sudo iptables $COMMON_RULES --dport 443
-  # else
-  #    echo "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
-  #    echo "CA certificate will be generated anyway, but it won't be used"
-  # fi
-
-  # TODO OLD end
-  # Exemption rule to stop docker from masquerading traffic routed to the
-  # transparent proxy
-  sudo iptables -t nat -I POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT
+    # Exemption rule to stop docker from masquerading traffic routed to the
+    # transparent proxy
+    sudo iptables -t nat -I POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT
 }
 
-stop_routing () {
+stop_routing() {
     # Remove iptables rules.
     set +e
-    ip route show table "$ROUTINGTABLE" | grep -q default \
-        && sudo ip route del default table "$ROUTINGTABLE"
+    ip route show table "$ROUTINGTABLE" | grep -q default &&
+        sudo ip route del default table "$ROUTINGTABLE"
     while true; do
-        #SAVE org
-        #rule_num=$(sudo iptables -t mangle -L PREROUTING -n --line-numbers \
-        #    | grep -E 'MARK.*172\.17.*tcp \S+ MARK set 0x1' \
-        #    | awk '{print $1}' \
-        #    | head -n1)
-
-           rule_num=$(sudo iptables -t nat -L OUTPUT -n --line-numbers \
-            | grep -E "${IPADDR}:${DNS_PROXY_PORT}" \
-            | awk '{print $1}' \
-            | head -n1)
-        [ -z "$rule_num" ] && break
-        #SAVE org
-        #sudo iptables -t mangle -D PREROUTING "$rule_num"
-        sudo iptables -t nat  -D OUTPUT "$rule_num"
+        rule_num=$(sudo iptables -t mangle -L PREROUTING -n --line-numbers |
+            grep -E 'MARK.*172\.17.*tcp \S+ MARK set 0x1' |
+            awk '{print $1}' |
+            head -n1)
+        sudo iptables -t mangle -D PREROUTING "$rule_num"
     done
     sudo iptables -t nat -D POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT 2>/dev/null
     set -e
 }
-
-
-
 
 showAllUsedPort() {
     # from here
@@ -149,14 +126,16 @@ checkKeysForRemoteControl() {
     if ls -l | grep -q ${SERVER_KEYS_DIR}; then
         echo "Directory ${SERVER_KEYS_DIR} availble"
         #any files inside directory
-        nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -v '/$' | wc -l)"
+        # TODO old SC2126 nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -v '/$' | wc -l)"
+        nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -c '/$' )"
         if [ "${nItems}" = "0" ]; then
             echo "dir ${SERVER_KEYS_DIR} is empty, no files inside ..."
             createRemoteKeys
         else
             echo "=> ${SERVER_KEYS_DIR}"
             #nKeys="$(ls -l ${SERVER_KEYS_DIR}/*key | grep -c "${SERVER_KEYS_DIR}/*key")"
-            nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key| grep -v '/$' | wc -l)"
+            # TODO old SC2126 nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key | grep -v '/$' | wc -l)"
+            nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key | grep -c '/$' )"
             echo "${nKeys}"
             if [ "${nKeys}" = "2" ]; then
                 echo "${nKeys}/2 key fond...OK"
@@ -165,7 +144,8 @@ checkKeysForRemoteControl() {
                 createRemoteKeys
             fi
             #nPems="$(ls -l ${SERVER_KEYS_DIR}/*pem | grep -c "${SERVER_KEYS_DIR}/*pem")"
-            nPems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep pem| grep -v '/$' | wc -l)"
+            # TODO old SC2126 nPems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep pem | grep -v '/$' | wc -l)"
+            nPems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep pem | grep -c '/$')"
             if [ "${nPems}" = "2" ]; then
                 echo "${nPems}/ 2 key fond...OK"
             else
@@ -204,26 +184,22 @@ checkRunningContainerAndStop() {
     fi
 }
 
+copyConfigFileForBuild() {
 
-copyConfigFileForBuild(){
+    #copy default scripts
+    cp squid-config/mime.conf current
+    #TODO old cp squid-config/squid.conf current
+    cp squid-config/start_squid.sh current
 
-#copy default scripts
-cp squid-config/mime.conf current
-#TODO old cp squid-config/squid.conf current
-cp squid-config/start_squid.sh current
-
-#copy customer settings
-cp squid-config/not-to-cache-sites.txt current
-cp squid-config/self-signed-cert.conf current
+    #copy customer settings
+    cp squid-config/not-to-cache-sites.txt current
+    cp squid-config/self-signed-cert.conf current
 
 }
 
-
-
 checkImagesAndBuildNewIfNecessary() {
 
-    copyConfigFileForBuild;
-
+    copyConfigFileForBuild
 
     if [ "$CREATE_NEW_IMAGES" = 'yes' ]; then
         #check images is advaible
@@ -282,18 +258,17 @@ runContainer() {
     echo "run container ..."
     echo "Used ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} to start new ${CONTAINER_NAME} container"
     #start container
- #TODO old
- #   CID=$(docker run --name "${CONTAINER_NAME}" -d \
- #       -v "$(pwd)"/a-records.conf:/opt/unbound/etc/unbound/a-records.conf:ro \
- #       -v "$(pwd)"/root.hints:/opt/unbound/etc/unbound/root.hints:ro \
- #       -v "$(pwd)"/unbound_control_keys/unbound_server.key:/opt/unbound/etc/unbound/unbound_server.key:ro \
- #       -v "$(pwd)"/unbound_control_keys/unbound_server.pem:/opt/unbound/etc/unbound/unbound_server.pem:ro \
- #       -v "$(pwd)"/unbound_control_keys/unbound_control.key:/opt/unbound/etc/unbound/unbound_control.key:ro \
- #       -v "$(pwd)"/unbound_control_keys/unbound_control.pem:/opt/unbound/etc/unbound/unbound_control.pem:ro \
- #       "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
+    #TODO old
+    #   CID=$(docker run --name "${CONTAINER_NAME}" -d \
+    #       -v "$(pwd)"/a-records.conf:/opt/unbound/etc/unbound/a-records.conf:ro \
+    #       -v "$(pwd)"/root.hints:/opt/unbound/etc/unbound/root.hints:ro \
+    #       -v "$(pwd)"/unbound_control_keys/unbound_server.key:/opt/unbound/etc/unbound/unbound_server.key:ro \
+    #       -v "$(pwd)"/unbound_control_keys/unbound_server.pem:/opt/unbound/etc/unbound/unbound_server.pem:ro \
+    #       -v "$(pwd)"/unbound_control_keys/unbound_control.key:/opt/unbound/etc/unbound/unbound_control.key:ro \
+    #       -v "$(pwd)"/unbound_control_keys/unbound_control.pem:/opt/unbound/etc/unbound/unbound_control.pem:ro \
+    #       "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-
-     CID=$(sudo docker run -d \
+    CID=$(sudo docker run -d \
         --name "${CONTAINER_NAME}" \
         --volume="${CACHEDIR}":/var/cache/squid:rw \
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
@@ -302,18 +277,17 @@ runContainer() {
         --hostname "${CONTAINER_NAME}" \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
+    IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
 
+    echo "${IPADDR}" >.currentContainerIpAddr.txt
 
-echo "${IPADDR}" >currentContainerIpAddr.txt
-#start_routing
-
-
+    start_routing
 
     #only for convenience see README.md
-    echo "${CID}" >currentContainer.id
+    echo "${CID}" >.currentContainer.id
 
-    #give docker few seconds
+    # give docker two seconds
+    # TODO check docker is ready
     sleep 2
 
     if docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | grep "${CONTAINER_NAME}" | grep -q "${TAG_NAME}"; then
