@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# your proxy IP
+# your proxy IP (docker container)
 SQUIDIP=$(cat .currentContainerIpAddr.txt)
 
 # your proxy listening port
 SQUIDPORT=3128
+# SQUIDPORT=3129
 
 iptables -t nat -A PREROUTING -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
 iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"

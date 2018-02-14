@@ -318,9 +318,10 @@ runContainer() {
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
         --volume="${CONFDIR}":/var/local/squid:ro \
         --volume="${LOGDIR}":/var/log/squid:rw \
-        --publish=3128:3128 \
         --hostname "${CONTAINER_NAME}" \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
+
+#    --publish=3128:3128 \
 
     IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
 
