@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# format with shfmt
-
 # TODO is port 53 free eg is used from dnsmasq
 
-BASH_PATH_HELPER=./bash_helper/bash_log_helper.sh; test -f $BASH_PATH_HELPER && source $BASH_PATH_HELPER
+BASH_PATH_HELPER=./bash_helper/bash_log_helper.sh
+test -f $BASH_PATH_HELPER && source $BASH_PATH_HELPER
 
+ROUTINGTABLE="TRANSPROXY"
 
 CACHEDIR=${CACHEDIR:-${PWD}/data/cache}
 CERTDIR=${CERTDIR:-${PWD}/data/ssl}
@@ -21,12 +21,12 @@ CONTAINER_NAME=${CONTAINER_NAME:-c-docker-unbound}
 IMAGES_NAME=${IMAGES_NAME:-i-docker-proxy}
 TAG_NAME=${TAG_NAME:-latest}
 SERVER_KEYS_DIR=unbound_control_keys
-OUTPUT_UNBOND_CONTROL_SETUP=output_unbound-control-setup.txt
+OUTPUT_UNBOUND_CONTROL_SETUP=output_unbound-control-setup.txt
 
 # DNS_PORT=53
 # DNS_PROXY_PORT=53
 
-#getopt
+# getopts
 while getopts ":n" opt; do
     case $opt in
     n)
@@ -44,6 +44,9 @@ done
 set -e
 
 start_routing() {
+
+    log "info" "start routing"
+
     # Add a new route table that routes everything marked through the new container
     # workaround boot2docker issue #367
     # https://github.com/boot2docker/boot2docker/issues/367
@@ -56,10 +59,15 @@ start_routing() {
             sudo ln -s /usr/local/etc/iproute2/rt_tables /etc/iproute2/rt_tables
         fi
     fi
+
+    log "info" "add  ROUTINGTABLE ${ROUTINGTABLE} /etc/iproute2/rt_tables"
+
     ([ -e /etc/iproute2/rt_tables ] && grep -q "${ROUTINGTABLE}" /etc/iproute2/rt_tables) ||
         sudo sh -c "echo '1	$ROUTINGTABLE' >> /etc/iproute2/rt_tables"
+
     ip rule show | grep -q "{$ROUTINGTABLE}" ||
         sudo ip rule add from all fwmark 0x1 lookup "${ROUTINGTABLE}"
+
     sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
 
     # Mark packets to port 80 and 443 external, so they route through the new
@@ -68,19 +76,29 @@ start_routing() {
     COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
       -j MARK --set-mark 1"
 
-    # TODO old dns aproach
+    # TODO old dns approach
     #COMMON_RULES="-t nat -A OUTPUT -p udp --dport ${DNS_PORT} -j DNAT --to ${IPADDR}:${DNS_PROXY_PORT}"
     #echo "Redirecting DNS to docker-"
 
-    sudo iptables "$COMMON_RULES"
+    COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
+    -j MARK --set-mark 1"
+
+    log "info" "Redirecting HTTP to docker-proxy"
+
+    sudo iptables "${COMMON_RULES}" --dport 80
+
+    log "info" "set iptables rule iptables ${COMMON_RULES}"
 
     if [ "$WITH_SSL" = 'yes' ]; then
-        echo "Redirecting DNS to $CONTAINER_NAME"
+        log "info" "Redirecting HTTPS to  $CONTAINER_NAME"
         sudo iptables "${COMMON_RULES}" --dport 443
+        log "info" "set iptables rule iptables ${COMMON_RULES}"
     else
-        echo "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
-        echo "CA certificate will be generated anyway, but it won't be used"
+        log "info" "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
+        log "info" "CA certificate will be generated anyway, but it won't be used"
     fi
+
+
 
     # Exemption rule to stop docker from masquerading traffic routed to the
     # transparent proxy
@@ -90,16 +108,28 @@ start_routing() {
 stop_routing() {
     # Remove iptables rules.
     set +e
+
+
+    log "info" "Delete default route from table ${ROUTINGTABLE}"
     ip route show table "$ROUTINGTABLE" | grep -q default &&
-        sudo ip route del default table "$ROUTINGTABLE"
+        sudo ip route del default table "${ROUTINGTABLE}"
+
+    log "info" " Delete all rules from ip rule "
+    sudo ip rule show | grep ${ROUTINGTABLE} | cut -d: -f1 | xargs -r -L1 sudo ip rule del prio
+
+    # TODO check if real all deleted
+
     while true; do
         rule_num=$(sudo iptables -t mangle -L PREROUTING -n --line-numbers |
             grep -E 'MARK.*172\.17.*tcp \S+ MARK set 0x1' |
             awk '{print $1}' |
             head -n1)
-        sudo iptables -t mangle -D PREROUTING "$rule_num"
+        sudo iptables -t mangle -D PREROUTING "${rule_num}"
+        log "notice" "Delete iptables rule"
+        log "info" "iptables -t mangle -D PREROUTING ${rule_num}"
     done
-    sudo iptables -t nat -D POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT 2>/dev/null
+    COMMON_RULES="-t nat -D POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT"
+    sudo iptables "${COMMON_RULES}" 2>/dev/null
     set -e
 }
 
@@ -111,53 +141,53 @@ showAllUsedPort() {
 
 createRemoteKeys() {
 
-    echo "delete keys..."
+    log "info" "delete keys..."
     rm -rf ./*key ./*pem
-    echo "create new keys..."
-    if "$(pwd)"/unbound-control-setup.sh -d ${SERVER_KEYS_DIR} >/tmp/${OUTPUT_UNBOND_CONTROL_SETUP}; then
-        echo "Keys generated...OK"
-        rm -rf /tmp/${OUTPUT_UNBOND_CONTROL_SETUP}
+    log "info" o "create new keys..."
+    if "$(pwd)"/unbound-control-setup.sh -d ${SERVER_KEYS_DIR} >/tmp/${OUTPUT_UNBOUND_CONTROL_SETUP}; then
+        log "info" o "Keys generated...OK"
+        rm -rf /tmp/${OUTPUT_UNBOUND_CONTROL_SETUP}
     else
-        echo "ERROR during execution"
-        echo "Please see output file !!!...Not OK"
-        cat /tmp/${OUTPUT_UNBOND_CONTROL_SETUP}
+        log "info" o "ERROR during execution"
+        log "info" o "Please see output file !!!...Not OK"
+        cat /tmp/${OUTPUT_UNBOUND_CONTROL_SETUP}
         exit 1
     fi
 }
 
 checkKeysForRemoteControl() {
     if ls -l | grep -q ${SERVER_KEYS_DIR}; then
-        echo "Directory ${SERVER_KEYS_DIR} availble"
+        log "info" o "Directory ${SERVER_KEYS_DIR} available"
         #any files inside directory
         # TODO old SC2126 nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -v '/$' | wc -l)"
-        nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -c '/$' )"
+        nItems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep -c '/$')"
         if [ "${nItems}" = "0" ]; then
-            echo "dir ${SERVER_KEYS_DIR} is empty, no files inside ..."
+            log "info" o "dir ${SERVER_KEYS_DIR} is empty, no files inside ..."
             createRemoteKeys
         else
-            echo "=> ${SERVER_KEYS_DIR}"
+            log "info" o "=> ${SERVER_KEYS_DIR}"
             #nKeys="$(ls -l ${SERVER_KEYS_DIR}/*key | grep -c "${SERVER_KEYS_DIR}/*key")"
             # TODO old SC2126 nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key | grep -v '/$' | wc -l)"
-            nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key | grep -c '/$' )"
-            echo "${nKeys}"
+            nKeys="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep key | grep -c '/$')"
+            log "info" o "${nKeys}"
             if [ "${nKeys}" = "2" ]; then
-                echo "${nKeys}/2 key fond...OK"
+                log "info" o "${nKeys}/2 key fond...OK"
             else
-                echo "${nKeys}/2 key fond...Not Ok"
+                log "info" o "${nKeys}/2 key fond...Not Ok"
                 createRemoteKeys
             fi
             #nPems="$(ls -l ${SERVER_KEYS_DIR}/*pem | grep -c "${SERVER_KEYS_DIR}/*pem")"
             # TODO old SC2126 nPems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep pem | grep -v '/$' | wc -l)"
             nPems="$(ls -1 --file-type ${SERVER_KEYS_DIR} | grep pem | grep -c '/$')"
             if [ "${nPems}" = "2" ]; then
-                echo "${nPems}/ 2 key fond...OK"
+                log "info" o "${nPems}/ 2 key fond...OK"
             else
-                echo "${nPems}/ 2 key fond...Not OK"
+                log "info" o "${nPems}/ 2 key fond...Not OK"
                 createRemoteKeys
             fi
         fi
     else
-        echo "Directory ${SERVER_KEYS_DIR} NOT availble, create new one..."
+        log "info" o "Directory ${SERVER_KEYS_DIR} NOT available, create new one..."
         mkdir -p ${SERVER_KEYS_DIR}
         touch .gitkeep
         createRemoteKeys
@@ -165,25 +195,27 @@ checkKeysForRemoteControl() {
 }
 
 checkRunningContainerAndStop() {
+
+    log "info" "check is container running"
     if docker ps | grep -q "${OWNER_NAME}/${IMAGES_NAME}"; then
         #TODO What is if we found more than container ?
-        echo "$(docker ps | grep -c "${OWNER_NAME}/${IMAGES_NAME}") running Container found ... $(docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | awk '{print $1}')"
+        log "info" "$(docker ps | grep -c "${OWNER_NAME}/${IMAGES_NAME}") running Container found ... $(docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | awk '{print $1}')"
         read -r -p "Would you like stop this container now ? Think on your Production  [y/N]" response
         case "$response" in [yY][eE][sS] | [yY])
-            echo "stopping container now ..."
+            log "info" "stopping container now ..."
             docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | awk '{print $1}' | xargs --no-run-if-empty docker stop >/dev/null
             ;;
         *)
-            echo "A current conntainer is still running ..."
+            log "info" "This container is still running ..."
             docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | grep "${CONTAINER_NAME}" | grep "${TAG_NAME}"
-            echo "Have fun with it...ciao"
+            log "info" "Have fun with it...ciao"
             exit 0
             ;;
         esac
 
     else
 
-        echo "No container ${OWNER_NAME}/${IMAGES_NAME} running!...OK"
+        log "warn" "No container ${OWNER_NAME}/${IMAGES_NAME} running!...OK"
     fi
 }
 
@@ -205,61 +237,61 @@ checkImagesAndBuildNewIfNecessary() {
     copyConfigFileForBuild
 
     if [ "$CREATE_NEW_IMAGES" = 'yes' ]; then
-        #check images is advaible
+        #check images is available
         if docker images "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}" | grep -q "${OWNER_NAME}/${IMAGES_NAME}"; then
-            echo "Delete current images  ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}"
+            log "info" "Delete current images  ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}"
             docker rmi "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}"
         else
-            echo "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} no found...OK"
-            echo "Nothing to do !...OK"
+            log "info" "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} no found...OK"
+            log "info" "Nothing to do !...OK"
         fi
     fi
     if docker images "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}" | grep -q "${OWNER_NAME}/${IMAGES_NAME}"; then
-        echo "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} exists...OK"
+        log "info" "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} exists...OK"
     else
-        echo "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} doesn't exist"
+        log "info" "Images ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} doesn't exist"
         read -r -p "Would you like build this images now ? [y/N]" response
         case "$response" in [yY][eE][sS] | [yY])
-            echo "start build images ${OWNER_NAME}/${IMAGES_NAME} "
-            echo "docker build --tag ${OWNER_NAME}/${IMAGES_NAME} --file current/Dockerfile ."
+            log "info" "start build images ${OWNER_NAME}/${IMAGES_NAME} "
+            log "info" "docker build --tag ${OWNER_NAME}/${IMAGES_NAME} --file current/Dockerfile ."
             docker build --tag "${OWNER_NAME}/${IMAGES_NAME}" --file current/Dockerfile "$(pwd)"/current
             ;;
         *)
-            echo "Without the images can you not start the docker container!"
-            echo "Rerun the script and choise yes for build the images ...ciao"
+            log "info" "Without the images can you not start the docker container!"
+            log "info" "Rerun the script and choice yes for build the images ...ciao"
             exit 0
             ;;
         esac
     fi
 }
 
-delteOldContainer() {
+deleteOldContainer() {
 
-    # check created contu
+    # check created container
     # we want use always new container
     # TODO is that stupid ???
 
-    echo "We would start always a new Container"
-    echo "Check old container availble .."
+    log "info" "We would start a new Container"
+    log "info" "Check old container available .."
 
     if docker ps -a | grep "${CONTAINER_NAME}"; then
-        echo "$(docker ps -a | grep -c "${CONTAINER_NAME}") ${CONTAINER_NAME} container found"
-        echo "We delete the container now ... "
+        log "info" "$(docker ps -a | grep -c "${CONTAINER_NAME}") ${CONTAINER_NAME} container found"
+        log "info" "We delete the container now ... "
         docker ps -a | grep "${CONTAINER_NAME}" | awk '{print $1}' | xargs --no-run-if-empty docker rm
         if docker ps -a | grep "${CONTAINER_NAME}"; then
-            echo " Error we could't delete the container ${CONTAINER_NAME} ...Not OK"
+            log "info" " Error we couldnt delete the container ${CONTAINER_NAME} ...Not OK"
             exit 1
         else
-            echo "All ${CONTAINER_NAME} container deleted...OK"
+            log "info" "All ${CONTAINER_NAME} container deleted...OK"
         fi
     else
-        echo "No ${CONTAINER_NAME} container found for deleted...OK"
+        log "info" "No ${CONTAINER_NAME} container found for deleted...OK"
     fi
 }
 
 runContainer() {
-    echo "run container ..."
-    echo "Used ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} to start new ${CONTAINER_NAME} container"
+    log "info" "run container ..."
+    log "info" "Used ${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME} to start new ${CONTAINER_NAME} container"
     #start container
     #TODO old
     #   CID=$(docker run --name "${CONTAINER_NAME}" -d \
@@ -294,14 +326,14 @@ runContainer() {
     sleep 2
 
     if docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | grep "${CONTAINER_NAME}" | grep -q "${TAG_NAME}"; then
-        echo "Container ${OWNER_NAME}/${CONTAINER_NAME}:${TAG_NAME} with $(echo "${CID}" | head -c 12) running...Ok"
+        log "info" "Container ${OWNER_NAME}/${CONTAINER_NAME}:${TAG_NAME} with $(log "info" "${CID}" | head -c 12) running...Ok"
     else
-        echo "Error container no comming up...Not Ok"
+        log "error" "Error container no coming up...Not Ok"
     fi
 }
 
 stopContainer() {
-    echo "stop conatiner ${CONTAINER_NAME}"
+    log "info" "stop container ${CONTAINER_NAME}"
     set +e
     sudo docker rm -fv "${CID}" >/dev/null 2>&1
     set -e
@@ -310,25 +342,25 @@ stopContainer() {
 }
 
 interrupted() {
-    echo 'Interrupted, cleaning up...'
+    log "info" 'Interrupted, cleaning up...'
     trap - INT
     stopContainer
     kill -INT $$
 }
 
 terminated() {
-    echo 'Terminated, cleaning up...'
+    log "info" 'Terminated, cleaning up...'
     trap - TERM
     stopContainer
     kill -TERM $$
 }
 
 main() {
-    echo "run"
+    log "info" "run"
     # TODO old
     #checkKeysForRemoteControl
     checkRunningContainerAndStop
-    delteOldContainer
+    deleteOldContainer
     checkImagesAndBuildNewIfNecessary
     runContainer
 
@@ -336,10 +368,10 @@ main() {
     trap interrupted INT
     trap terminated TERM
     sudo docker logs -f "${CID}"
-    echo 'Squid exited unexpectedly, cleaning up...'
+    log "info" 'Squid exited unexpectedly, cleaning up...'
     stopContainer
 
 }
 
 main
-echo
+log "info" "done"

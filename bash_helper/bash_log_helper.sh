@@ -8,7 +8,7 @@
 readonly __VERBOSE=7
 
 # loglevels
-declare -A LOG_LEVELS
+# TODO old not more useddeclare -A LOG_LEVELS
 # https://en.wikipedia.org/wiki/Syslog#Severity_level
 # TODO old not more used LOG_LEVELS=([0]="emerg" [1]="alert" [2]="crit" [3]="err" [4]="warning" [5]="notice" [6]="info" [7]="debug")
 
@@ -79,7 +79,7 @@ fi
 		.log 7 "[\e[0;32m debug \x1B[0m] $log_message"
 		;;
 		*)
-		.log 6 "[\e[0;32m info \x1B[0m] $1 $log_message"
+		.log 6 "[\e[0;32m info \x1B[0m] $log_message"
 		;;
 	esac
 }
