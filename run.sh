@@ -4,6 +4,9 @@
 
 # TODO is port 53 free eg is used from dnsmasq
 
+BASH_PATH_HELPER=./bash_helper/bash_log_helper.sh; test -f $BASH_PATH_HELPER && source $BASH_PATH_HELPER
+
+
 CACHEDIR=${CACHEDIR:-${PWD}/data/cache}
 CERTDIR=${CERTDIR:-${PWD}/data/ssl}
 CONTAINER_NAME=${CONTAINER_NAME:-docker-proxy}
