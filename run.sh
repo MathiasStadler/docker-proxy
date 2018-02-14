@@ -43,7 +43,7 @@ done
 #exit on error
 set -e
 
-start_routing() {
+start_docker_routing() {
 
     log "info" "start routing"
 
@@ -68,6 +68,11 @@ start_routing() {
     ip rule show | grep -q "{$ROUTINGTABLE}" ||
         sudo ip rule add from all fwmark 0x1 lookup "${ROUTINGTABLE}"
 
+    # delete old ip if available
+    ip route show table "$ROUTINGTABLE" | grep -q default &&
+        sudo ip route del default table "${ROUTINGTABLE}"
+
+    # set new ip for routing
     sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
 
     # Mark packets to port 80 and 443 external, so they route through the new
@@ -85,7 +90,7 @@ start_routing() {
 
     log "info" "Redirecting HTTP to docker-proxy"
 
-    sudo iptables "${COMMON_RULES}" --dport 80
+    sudo iptables ${COMMON_RULES} --dport 80
 
     log "info" "set iptables rule iptables ${COMMON_RULES}"
 
@@ -98,8 +103,6 @@ start_routing() {
         log "info" "CA certificate will be generated anyway, but it won't be used"
     fi
 
-
-
     # Exemption rule to stop docker from masquerading traffic routed to the
     # transparent proxy
     sudo iptables -t nat -I POSTROUTING -o docker0 -s 172.17.0.0/16 -j ACCEPT
@@ -107,14 +110,18 @@ start_routing() {
 
 stop_routing() {
     # Remove iptables rules.
+    log "info" "stop routing . . ."
     set +e
+
+    #TODO hack make save and nice
+    sudo sed -i "/.*${ROUTINGTABLE}.*/d" /etc/iproute2/rt_tables
 
 
     log "info" "Delete default route from table ${ROUTINGTABLE}"
     ip route show table "$ROUTINGTABLE" | grep -q default &&
         sudo ip route del default table "${ROUTINGTABLE}"
 
-    log "info" " Delete all rules from ip rule "
+    log "info" "Delete all rules from ip rule "
     sudo ip rule show | grep ${ROUTINGTABLE} | cut -d: -f1 | xargs -r -L1 sudo ip rule del prio
 
     # TODO check if real all deleted
@@ -124,6 +131,7 @@ stop_routing() {
             grep -E 'MARK.*172\.17.*tcp \S+ MARK set 0x1' |
             awk '{print $1}' |
             head -n1)
+            [ -z "$rule_num" ] && break
         sudo iptables -t mangle -D PREROUTING "${rule_num}"
         log "notice" "Delete iptables rule"
         log "info" "iptables -t mangle -D PREROUTING ${rule_num}"
@@ -204,6 +212,7 @@ checkRunningContainerAndStop() {
         case "$response" in [yY][eE][sS] | [yY])
             log "info" "stopping container now ..."
             docker ps | grep "${OWNER_NAME}/${IMAGES_NAME}" | awk '{print $1}' | xargs --no-run-if-empty docker stop >/dev/null
+            stop_routing
             ;;
         *)
             log "info" "This container is still running ..."
@@ -309,6 +318,7 @@ runContainer() {
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
         --volume="${CONFDIR}":/var/local/squid:ro \
         --volume="${LOGDIR}":/var/log/squid:rw \
+        --publish=3128:3128 \
         --hostname "${CONTAINER_NAME}" \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
@@ -316,7 +326,7 @@ runContainer() {
 
     echo "${IPADDR}" >.currentContainerIpAddr.txt
 
-    start_routing
+    start_docker_routing
 
     #only for convenience see README.md
     echo "${CID}" >.currentContainer.id
@@ -336,6 +346,8 @@ stopContainer() {
     log "info" "stop container ${CONTAINER_NAME}"
     set +e
     sudo docker rm -fv "${CID}" >/dev/null 2>&1
+    sudo rm -rf .currentContainer.sh
+    sudo rm -rf .currentContainerIpAddr.sh
     set -e
     stop_routing
 

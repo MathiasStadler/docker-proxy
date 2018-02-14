@@ -6,7 +6,7 @@ function gen-cert() {
 # from here
 # http://squid-web-proxy-cache.1019090.n4.nabble.com/Squid-with-SSL-Bump-on-Debian-testing-SSL-ERROR-RX-RECORD-TOO-LONG-td4681683.html
 
-    #FIX squid3 to squid 
+    #FIX squid3 to squid
     pushd /etc/squid/ssl_cert > /dev/null
     if [ ! -f ca.pem ]; then
         openssl req -config /usr/local/bin/self-signed-cert.conf -new -newkey rsa:2048 -sha256 -days 365 -nodes \
@@ -33,7 +33,8 @@ function gen-cert() {
 function start-routing() {
     # Setup the NAT rule that enables transparent proxying
     IPADDR=$(/sbin/ip -o -f inet addr show eth0 | awk '{ sub(/\/.+/,"",$4); print $4 }')
-    echo "IPADDR (start_squid.sh)=>  ${IPADDR}"
+    iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
+    iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination ${IPADDR}:3130
     return $?
 }
 
