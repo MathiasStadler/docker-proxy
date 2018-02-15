@@ -57,8 +57,10 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
     && gpg --keyserver pgpkeys.mit.edu --recv-key  EF0F382A1A7B6500   \
     &&  gpg -a --export EF0F382A1A7B6500 | sudo apt-key add - \
     && gpg --keyserver keyserver.ubuntu.com --recv-keys 2BA97CED D876D5A3 \
-    && gpg --no-default-keyring -a --export 2BA97CED D876D5A3  | gpg --no-default-keyring --keyring ~/.gnupg/trustedkeys.gpg --import -  \
-    && echo "deb-src ftp://ftp.de.debian.org/debian/ stable main contrib" >>/etc/apt/sources.list  \
+    && gpg --no-default-keyring -a --export 2BA97CED D876D5A3  | gpg --no-default-keyring --keyring ~/.gnupg/trustedkeys.gpg --import -
+
+
+    RUN echo "deb-src ftp://ftp.de.debian.org/debian/ stable main contrib" >>/etc/apt/sources.list  \
     # from here
     # https://github.com/shadowsocks/shadowsocks-libev/issues/1264
     #&& echo "deb http://archive.ubuntu.com/ubuntu xenial-backports main restricted universe multiverse" >>/etc/apt/sources.list  \

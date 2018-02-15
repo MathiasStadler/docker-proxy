@@ -57,4 +57,4 @@ squid -k parse -f /var/local/squid/squid.conf || exit 1
 # start squid
 squid -f /var/local/squid/squid.conf
 #show log on console
-tail -f /var/log/squid/access.log /var/log/squid/cache.log
+tail -f /var/log/squid/access.log /var/log/squid/cache.log /var/log/squid/squid.log

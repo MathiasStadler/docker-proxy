@@ -50,11 +50,11 @@ http_port 3128
 http_port 3129 intercept
 
 
-http_port 3130 ssl-bump intercept \
-cert=/etc/squid/ssl_cert/ca.pem \
-key=/etc/squid/ssl_cert/privkey.pem  \
-generate-host-certificates=on  \
-dynamic_cert_mem_cache_size=4MB
+# http_port 3130 ssl-bump intercept \
+# cert=/etc/squid/ssl_cert/ca.pem \
+# key=/etc/squid/ssl_cert/privkey.pem  \
+# generate-host-certificates=on  \
+# dynamic_cert_mem_cache_size=4MB
 
 request_header_access Surrogate-Capability deny all
 

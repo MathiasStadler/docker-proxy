@@ -1,6 +1,6 @@
 # docker-proxy
 
-- My copy of silarsis/docker-proxy with my config
+- My copy of [silarsis/docker-proxy](https://github.com/silarsis/docker-proxy) with my config
 
 ## edit squid.conf
 

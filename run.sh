@@ -14,7 +14,10 @@ CONFDIR=${CONFDIR:-${PWD}}
 LOGDIR=${LOGDIR:-${PWD}/log}
 
 #set env
-GIT_OWNER_NAME=$(git config user.name | tr '[:upper:]' '[:lower:]')
+TMP_GIT_OWNER_NAME=$(git config user.name | tr '[:upper:]' '[:lower:]')
+#replace space in the name
+GIT_OWNER_NAME="${TMP_GIT_OWNER_NAME// /.}"
+
 BASH_OWNER_NAME=$(id -u -n)
 OWNER_NAME=${GIT_OWNER_NAME:-$BASH_OWNER_NAME}
 CONTAINER_NAME=${CONTAINER_NAME:-c-docker-unbound}
@@ -65,8 +68,14 @@ start_docker_routing() {
     ([ -e /etc/iproute2/rt_tables ] && grep -q "${ROUTINGTABLE}" /etc/iproute2/rt_tables) ||
         sudo sh -c "echo '1	$ROUTINGTABLE' >> /etc/iproute2/rt_tables"
 
+    log "info" "Delete all rules from ip rule "
+    sudo ip rule show | grep ${ROUTINGTABLE} | cut -d: -f1 | xargs -r -L1 sudo ip rule del prio
+
+    log "info" "Set ip rule"
     ip rule show | grep -q "{$ROUTINGTABLE}" ||
         sudo ip rule add from all fwmark 0x1 lookup "${ROUTINGTABLE}"
+
+    ip rule show
 
     # delete old ip if available
     ip route show table "$ROUTINGTABLE" | grep -q default &&
@@ -75,28 +84,43 @@ start_docker_routing() {
     # set new ip for routing
     sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
 
+
+    log "info" "show route"
+    ip route show
+
+    log "info" "show route table ${ROUTINGTABLE}
+    sudo ip route show table ${ROUTINGTABLE}"
+
     # Mark packets to port 80 and 443 external, so they route through the new
     # route table
 
-    COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
-      -j MARK --set-mark 1"
+    COMMON_RULES=" -t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}"
+
+    MARK_RULES=" -j MARK --set-mark 1"
+
+    LOG_RULES=" -j LOG --log-level debug "
 
     # TODO old dns approach
     #COMMON_RULES="-t nat -A OUTPUT -p udp --dport ${DNS_PORT} -j DNAT --to ${IPADDR}:${DNS_PROXY_PORT}"
     #echo "Redirecting DNS to docker-"
 
-    COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR}
-    -j MARK --set-mark 1"
+    #TODO old maybe double
+    #COMMON_RULES="-t mangle -I PREROUTING -p tcp -i docker0 ! -s ${IPADDR} -j MARK --set-mark 1"
 
     log "info" "Redirecting HTTP to docker-proxy"
 
-    sudo iptables ${COMMON_RULES} --dport 80
+    sudo iptables ${COMMON_RULES} --dport 80 ${MARK_RULES}
+    # TODO clean up at stop
+    sudo iptables ${COMMON_RULES} --dport 80 ${LOG_RULES} --log-prefix "IPTables-Marked: "
 
     log "info" "set iptables rule iptables ${COMMON_RULES}"
 
-    if [ "$WITH_SSL" = 'yes' ]; then
+    #TODO enable flag from cli if [ "$WITH_SSL" = 'yes' ]; then
+    if false; then
         log "info" "Redirecting HTTPS to  $CONTAINER_NAME"
-        sudo iptables "${COMMON_RULES}" --dport 443
+        sudo iptables ${COMMON_RULES} --dport 443  ${MARK_RULES}
+        sudo iptables ${COMMON_RULES} --dport 443 ${LOG_RULES} --log-prefix "IPTables-Marked: "
+
         log "info" "set iptables rule iptables ${COMMON_RULES}"
     else
         log "info" "Not redirecting HTTPS. To enable, re-run with the argument 'ssl'"
@@ -312,7 +336,10 @@ runContainer() {
     #       -v "$(pwd)"/unbound_control_keys/unbound_control.pem:/opt/unbound/etc/unbound/unbound_control.pem:ro \
     #       "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-    CID=$(sudo docker run -d \
+# --cap-add=NET_ADMIN for set iptables rule inside container
+
+    CID=$(sudo docker run --cap-add=NET_ADMIN \
+        -d \
         --name "${CONTAINER_NAME}" \
         --volume="${CACHEDIR}":/var/cache/squid:rw \
         --volume="${CERTDIR}":/etc/squid/ssl_cert:rw \
@@ -369,6 +396,7 @@ terminated() {
 }
 
 main() {
+
     log "info" "run"
     # TODO old
     #checkKeysForRemoteControl

@@ -34,3 +34,25 @@ docker run -it hiromasaono/curl curl http://www.tagesschau.de
 ## squid BUGReporting and debug tcpdump
 
 [SQUID bug reporting](https://wiki.squid-cache.org/SquidFaq/BugReporting)
+
+[Squid 3.5: Preventing forwarding loop in intercept mode](https://serverfault.com/questions/743977/squid-3-5-preventing-forwarding-loop-in-intercept-mode)
+
+
+## iptables inside docker container
+
+- iptables v1.4.21: can't initialize iptables table `nat': Permission denied (you must be root)
+
+- [from here](https://github.com/moby/moby/issues/4424)
+```bash
+--cap-add=NET_ADMIN
+v.s.
+--privileged
+```
+
+## benchmark / performance
+
+- marked packet and route  vs. iptables redirect
+
+## show iptables rules from container on the host
+
+## routing inside container => composer, kubernetes
