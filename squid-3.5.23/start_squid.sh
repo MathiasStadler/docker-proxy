@@ -31,7 +31,7 @@ function gen-cert() {
 }
 
 function start-routing() {
-    # Setup the NAT rule that enables transparent proxying
+    # Setup the NAT rule that enables transparent proxying inside the container
     IPADDR=$(/sbin/ip -o -f inet addr show eth0 | awk '{ sub(/\/.+/,"",$4); print $4 }')
     iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination ${IPADDR}:3129
     iptables -t nat -A PREROUTING -p tcp --dport 443 -j DNAT --to-destination ${IPADDR}:3130

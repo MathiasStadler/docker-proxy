@@ -1,0 +1,11 @@
+trapapa@trapapa-ThinkCentre-M92P:~/Projects/ofGitHub/docker-proxy$ sudo ./set-proxy-iptables.shChain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+1       66  3884 DOCKER     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+2        0     0 ACCEPT     tcp  --  *      *       172.17.0.2           0.0.0.0/0            tcp dpt:80
+3        0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:172.17.0.2:3128
+
+Chain PREROUTING (policy ACCEPT 1 packets, 69 bytes)
+num   pkts bytes target     prot opt in     out     source               destination
+1       66  3884 DOCKER     all  --  *      *       0.0.0.0/0            0.0.0.0/0            ADDRTYPE match dst-type LOCAL
+2        0     0 ACCEPT     tcp  --  *      *       172.17.0.2           0.0.0.0/0            tcp dpt:80
+3        3   180 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:80 to:172.17.0.2:80

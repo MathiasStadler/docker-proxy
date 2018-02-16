@@ -1,8 +1,14 @@
 #!/bin/bash
 
-curl -sS -o /dev/null https://httpbin.org/get 2>&1 || exit 1
+# add --sslv2
+# from here
+# https://stackoverflow.com/questions/21619468/curl-returns-unknown-protocol
 
-curl -sS -v -o /dev/null https://httpbin.org/get 2>&1 \
+openssl version -a
+
+curl -v -sS -o /dev/null https://httpbin.org/get  2>&1 || exit 1
+
+curl -sS -v -o /dev/null https://httpbin.org/get  2>&1 \
     | grep -q 'X-Cache:'
 
 if [ $? -ne 0 ]; then

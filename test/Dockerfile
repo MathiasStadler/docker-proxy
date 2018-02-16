@@ -19,4 +19,6 @@ COPY detect-proxy.sh test-proxy.sh HttpTest.java /root/
 RUN javac HttpTest.java \
     && ./detect-proxy.sh start
 
+RUN openssl version -a
+
 CMD /root/test-proxy.sh

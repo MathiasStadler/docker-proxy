@@ -56,3 +56,91 @@ v.s.
 ## show iptables rules from container on the host
 
 ## routing inside container => composer, kubernetes
+
+## curl unknown protocol
+
+- curl: (35) error:140770FC:SSL routines:SSL23_GET_SERVER_HELLO:unknown protocol
+
+## curl --cacert
+
+```bash
+curl --cacert non_existing_file https://www.google.com
+```
+
+```bash
+curl -v -sS -o /dev/null https://httpbin.org/get
+```
+
+## TODO npm pip
+
+- Some programs **don't** use the OS's primary key store, such as npm and pip. You may need to take extra steps for those programs.
+
+
+## curl
+
+- curl: (4) OpenSSL was built without SSLv2 support
+
+
+## see header from request and response
+
+```bash
+#~~~~~~~~~ snip of squid.conf ~~~~~~~~~~~~~~~
+debug_options  ALL,1 11,2 74,9,93,3
+#logformat squid %tg.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %[un %Sh/%<a %mt
+#access_log /var/log/squid/access.log squid
+
+
+# <Client IP> <Username> [<Local Time>] "<Request Method> <Request URL> HTTP/<Protocol Version> <Response Status Code> \
+# <Sent reply size (with hdrs)> <Referer> <User Agent> <Squid Request Status>:<Squid Hierarchy Status>
+logformat combined %>a %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+access_log /var/log/squid/squid.log squid
+access_log /var/log/squid/access.log combined
+
+#~~~~~~~~~ snip of squid.conf ~~~~~~~~~~~~~~~
+```
+
+## chiper setting http://squid-web-proxy-cache.1019090.n4.nabble.com/Help-troubleshooting-proxy-lt-gt-client-https-td4682583.html
+
+
+## to know
+
+- [from here] http://squid-web-proxy-cache.1019090.n4.nabble.com/Help-troubleshooting-proxy-lt-gt-client-https-td4682583.html
+
+```bash
+http_port 3128
+# HTTP-over-TCP
+# HTTPS-over-TCP (aka HTTP-over-TLS-over-TCP)
+
+https_port 3129
+# HTTP-over-TLS   (aka HTTP-over-TLS-over-TCP)
+# HTTPS-over-TLS (aka HTTP-over-TLS-over-TLS-over-TCP)
+```
+
+
+## curl opsenssl error
+
+see here SSL23_GET_SERVER_HELLO instead ServerHello
+
+[see here](https://stackoverflow.com/questions/15166950/unable-to-establish-ssl-connection-how-do-i-fix-my-ssl-cert)
+
+```bash
+#check cert from remote host
+openssl s_client -connect httpbin.org:443
+
+
+```
+
+
+
+## SECURITY ALERT: Host header forgery detected on (intercepted port does not match 443)
+
+- [see here ](https://wiki.squid-cache.org/KnowledgeBase/HostHeaderForgery)
+
+```bash
+2018/02/16 15:58:57.351 kid1| SECURITY ALERT: Host header forgery detected on local=172.17.0.2:3130 remote=172.17.0.1:45430 FD 36 flags=33 (intercepted port does not match 443)
+```
+
+## logformat combined
+[see here](http://www.squid-cache.org/Doc/config/logformat/)
+
+## E2guardian Web filtering

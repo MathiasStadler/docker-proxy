@@ -4,16 +4,31 @@
 SQUIDIP=$(cat .currentContainerIpAddr.txt)
 
 # your proxy listening port
-#SQUIDPORT=3128
+SQUIDPORT=3128
+
+# PORT 3120 not working because squid detetct SECURITY ALERT: Host header forgery detected on
+# because squid has no access do nat different namespace
+# NOT WORKING SQUIDPORT_HTTPS=3130
+SQUIDPORT_HTTPS=443
 #SQUIDPORT=3129
 # port 80 because the container has a seperate iptable rule to forward the right port
-SQUIDPORT=80
+#SQUIDPORT=80
+
+# TODO set dynamisch interfaces eno1
+#
+iptables -t nat -A PREROUTING -i eno1 -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"
+iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t mangle -A PREROUTING -i eno1 -p tcp --dport "$SQUIDPORT" -j DROP
 
 
-iptables -t nat -A PREROUTING -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"
-# iptables -t nat -A POSTROUTING -j MASQUERADE
-# iptables -t mangle -A PREROUTING -p tcp --dport "$SQUIDPORT" -j DROP
+#https
+iptables -t nat -A PREROUTING -i eno1 -s "$SQUIDIP" -p tcp --dport 443 -j ACCEPT
+iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 443 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT_HTTPS"
+iptables -t nat -A POSTROUTING -j MASQUERADE
+iptables -t mangle -A PREROUTING -i eno1 -p tcp --dport "$SQUIDPORT_HTTPS" -j DROP
+
+#TODO check why https packet dropped
 
 iptables -t nat  -L  -n -v  --line-numbers
 

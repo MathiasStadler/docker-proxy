@@ -111,15 +111,15 @@ start_docker_routing() {
 
     sudo iptables ${COMMON_RULES} --dport 80 ${MARK_RULES}
     # TODO clean up at stop
-    sudo iptables ${COMMON_RULES} --dport 80 ${LOG_RULES} --log-prefix "IPTables-Marked: "
+    # TODO disables log sudo iptables ${COMMON_RULES} --dport 80 ${LOG_RULES} --log-prefix "IPTables-Marked: "
 
     log "info" "set iptables rule iptables ${COMMON_RULES}"
 
     #TODO enable flag from cli if [ "$WITH_SSL" = 'yes' ]; then
-    if false; then
+    if true; then
         log "info" "Redirecting HTTPS to  $CONTAINER_NAME"
         sudo iptables ${COMMON_RULES} --dport 443  ${MARK_RULES}
-        sudo iptables ${COMMON_RULES} --dport 443 ${LOG_RULES} --log-prefix "IPTables-Marked: "
+        # TODO disables log sudo iptables ${COMMON_RULES} --dport 443 ${LOG_RULES} --log-prefix "IPTables-Marked: "
 
         log "info" "set iptables rule iptables ${COMMON_RULES}"
     else
