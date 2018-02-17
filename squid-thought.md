@@ -174,7 +174,7 @@ ssl-bump code. It is long since irrelevant. I recommend removing it.
 
 # check port
 # you should only see the expose port
-> sudo netstat -antp 
+> sudo netstat -antp
 ```
 
 ```bash
@@ -190,9 +190,82 @@ http_port 0.0.0.0:3128
 ## insatll netstat
 
 
-# acl manager proto manager 
+# acl manager proto manager
 
 ```text
 manager" ACL is now built-in. You can remove that incorrect definition.
 ```
+
+
+## another thread
+
+http://squid-web-proxy-cache.1019090.n4.nabble.com/squid-3-5-24-Host-header-forgery-detected-td4681692.html
+
+```text
+> sslproxy_cert_error allow all
+> sslproxy_flags DONT_VERIFY_PEER
+
+Please remove the above. I really cannot stress enough how bad it is. It
+completely and utterly removes all security from HTTPS.
+
+DONT_VERIFY_PEER is of almost zero benefit and allows several whole
+classes of attacks to be performed (completely invisibly to you and your
+client) by *other* people attacking your Internet connections. Then
+"sslproxy_cert_error allow all" forbids Squid from informing anybody
+(including you!) about anything suspicious Squid might still be able to
+detect.
+
+Yes errors will happen in TLS/SSL. You *need* to know what those are,
+and for that you *need* Squid to be doing the peer/server verification.
+
+_Some_ errors can be ignored when used by certain servers. That is what
+sslproxy_cert_error exists for. Use it sparingly.
+
+```
+
+
+
+http://squid-web-proxy-cache.1019090.n4.nabble.com/squid-3-5-24-Host-header-forgery-detected-td4681692.html
+
+https://wiki.squid-cache.org/KnowledgeBase/HostHeaderForgery
+
+
+
+## install dig
+
+```bash
+sudo apt-get install dnsutils
+```
+
+
+## install vi/vim
+
+```bash
+sudo apt-get install vim
+```
+
+
+## dns problem behind a proxy
+https://unix.stackexchange.com/questions/212897/nslookup-dig-firefox-ignoring-etc-hosts-file-entries
+
+- mainly
+https://unix.stackexchange.com/questions/158419/browsers-doesnt-see-an-aliases-in-etc-hosts
+
+
+## Without that information all traffic will get a 409 HTTP error and log this alert.
+
+[from here](https://wiki.squid-cache.org/KnowledgeBase/HostHeaderForgery)
+
+```text
+ensure that NAT is performed on the same box as Squid.
+
+    Squid MUST have access to the NAT systems records of what the original destination IP was. **Without that information all traffic will get a 409 HTTP error and log this alert.**
+
+    When operating Squid on a different machine to your router use Policy Routing or a tunnel to deliver traffic to squid. Do not perform destination NAT (DNAT, REDIRECT, Port Forwarding) on the router machine before the traffic hits Squid.
+```
+
+## policy routing
+
+[overview blog entry](https://blog.scottlowe.org/2013/05/29/a-quick-introduction-to-linux-policy-routing/
+)
 
