@@ -130,8 +130,6 @@ openssl s_client -connect httpbin.org:443
 
 ```
 
-
-
 ## SECURITY ALERT: Host header forgery detected on (intercepted port does not match 443)
 
 - [see here ](https://wiki.squid-cache.org/KnowledgeBase/HostHeaderForgery)
@@ -144,3 +142,57 @@ openssl s_client -connect httpbin.org:443
 [see here](http://www.squid-cache.org/Doc/config/logformat/)
 
 ## E2guardian Web filtering
+- pfsence
+- snort
+- ids
+- squid gard
+
+
+## error language
+ error_default_language de-de
+<http://master.squid-cache.org/Doc/config/error_default_language/>
+
+
+## always_direct allow all
+
+[see here](http://lists.squid-cache.org/pipermail/squid-users/2017-May/015467.html)
+
+```text
+That "always_direct" was a hack to workaround a bug in the first
+ssl-bump code. It is long since irrelevant. I recommend removing it.
+```
+
+## For the redirector debug_options 61,5
+
+## Squid 3 is only listening only on IPv6
+
+[netstat squid3](http://blogs.barlow.uk.net/techblog/squid-3-listening-ipv6/)
+
+```bash
+# install netstat
+> apt-get install -y net-tools
+
+# check port
+# you should only see the expose port
+> sudo netstat -antp 
+```
+
+```bash
+#squid.conf
+
+#listen on tcp6
+http_port 3128
+
+#listen on tcp4
+http_port 0.0.0.0:3128
+```
+
+## insatll netstat
+
+
+# acl manager proto manager 
+
+```text
+manager" ACL is now built-in. You can remove that incorrect definition.
+```
+
