@@ -89,7 +89,7 @@ done
 while true; do
     # TODO old echo "MASQUERADE.*all.*--.*"
     rule_num=$(sudo iptables -t nat -v -n -L POSTROUTING --line-numbers |
-        grep -E 'MASQUERADE.*all.*--.*$external_interface.*' |
+        grep -E "MASQUERADE.*all.*--.*$external_interface.*" |
         awk '{print $1}' |
         head -n1)
 
@@ -135,7 +135,7 @@ done
 # iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 443 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"
 while true; do
     # 'DNAT.*tcp.*eno1.*tcp.*dpt:80.*to.*172.17.0.2:3128'
-    echo "DNAT.*tcp.*$external_interface.*tcp.*dpt:$HTTPS.*to.*$SQUIDIP:$SQUIDPORT_HTTPS"
+    # TODO old echo "DNAT.*tcp.*$external_interface.*tcp.*dpt:$HTTPS.*to.*$SQUIDIP:$SQUIDPORT_HTTPS"
     rule_num=$(sudo iptables -t nat -v -n -L PREROUTING -v --line-numbers |
         grep -E "DNAT.*tcp.*$external_interface.*tcp.*dpt:$HTTPS.*to.*$SQUIDIP:$SQUIDPORT_HTTPS" |
         awk '{print $1}' |
@@ -151,7 +151,7 @@ done
 while true; do
     # TODO old echo "MASQUERADE.*all.*--.*"
     rule_num=$(sudo iptables -t nat -v -n -L POSTROUTING --line-numbers |
-        grep -E 'MASQUERADE.*all.*--.*$external_interface.*' |
+        grep -E "MASQUERADE.*all.*--.*$external_interface.*" |
         awk '{print $1}' |
         head -n1)
 
