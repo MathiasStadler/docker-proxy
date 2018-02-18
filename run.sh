@@ -81,7 +81,7 @@ start_docker_routing() {
     ip route show table "$ROUTINGTABLE" | grep -q default &&
         sudo ip route del default table "${ROUTINGTABLE}"
 
-    # set new ip for routing
+    # set new ip route  for routing
     sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
 
 
@@ -137,7 +137,8 @@ stop_routing() {
     log "info" "stop routing . . ."
     set +e
 
-    #TODO hack make save and nice
+    # TODO hack make save and nice
+    # remove old entry of ROUTINGTABLE in /etc/iproute2/rt_tables
     sudo sed -i "/.*${ROUTINGTABLE}.*/d" /etc/iproute2/rt_tables
 
 
