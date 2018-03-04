@@ -68,7 +68,7 @@ start_docker_routing() {
     ([ -e /etc/iproute2/rt_tables ] && grep -q "${ROUTINGTABLE}" /etc/iproute2/rt_tables) ||
         sudo sh -c "echo '1	$ROUTINGTABLE' >> /etc/iproute2/rt_tables"
 
-    log "info" "Delete all rules from ip rule "
+    log "info" "Delete all rules from ip rule of ROUTINGTABLE ${ROUTINGTABLE}"
     sudo ip rule show | grep ${ROUTINGTABLE} | cut -d: -f1 | xargs -r -L1 sudo ip rule del prio
 
     log "info" "Set ip rule"
@@ -83,7 +83,6 @@ start_docker_routing() {
 
     # set new ip route  for routing
     sudo ip route add default via "${IPADDR}" dev docker0 table "${ROUTINGTABLE}"
-
 
     log "info" "show route"
     ip route show
@@ -118,7 +117,7 @@ start_docker_routing() {
     #TODO enable flag from cli if [ "$WITH_SSL" = 'yes' ]; then
     if true; then
         log "info" "Redirecting HTTPS to  $CONTAINER_NAME"
-        sudo iptables ${COMMON_RULES} --dport 443  ${MARK_RULES}
+        sudo iptables ${COMMON_RULES} --dport 443 ${MARK_RULES}
         # TODO disables log sudo iptables ${COMMON_RULES} --dport 443 ${LOG_RULES} --log-prefix "IPTables-Marked: "
 
         log "info" "set iptables rule iptables ${COMMON_RULES}"
@@ -141,7 +140,6 @@ stop_routing() {
     # remove old entry of ROUTINGTABLE in /etc/iproute2/rt_tables
     sudo sed -i "/.*${ROUTINGTABLE}.*/d" /etc/iproute2/rt_tables
 
-
     log "info" "Delete default route from table ${ROUTINGTABLE}"
     ip route show table "$ROUTINGTABLE" | grep -q default &&
         sudo ip route del default table "${ROUTINGTABLE}"
@@ -156,7 +154,7 @@ stop_routing() {
             grep -E 'MARK.*172\.17.*tcp \S+ MARK set 0x1' |
             awk '{print $1}' |
             head -n1)
-            [ -z "$rule_num" ] && break
+        [ -z "$rule_num" ] && break
         sudo iptables -t mangle -D PREROUTING "${rule_num}"
         log "notice" "Delete iptables rule"
         log "info" "iptables -t mangle -D PREROUTING ${rule_num}"
@@ -337,9 +335,9 @@ runContainer() {
     #       -v "$(pwd)"/unbound_control_keys/unbound_control.pem:/opt/unbound/etc/unbound/unbound_control.pem:ro \
     #       "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-# --cap-add=NET_ADMIN for set iptables rule inside container
+    # --cap-add=NET_ADMIN for set iptables rule inside container
 
-    CID=$(sudo docker run --cap-add=NET_ADMIN \
+    CID=$(sudo docker run --cap-add=ALL \
         -d \
         --name "${CONTAINER_NAME}" \
         --volume="${CACHEDIR}":/var/cache/squid:rw \
@@ -349,7 +347,9 @@ runContainer() {
         --hostname "${CONTAINER_NAME}" \
         "${OWNER_NAME}/${IMAGES_NAME}:${TAG_NAME}")
 
-#    --publish=3128:3128 \
+    # --publish=80:80 \
+    # --publish=443:443 \
+    # --publish=3128:3128 \
 
     IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
 

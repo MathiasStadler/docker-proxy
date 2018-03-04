@@ -22,6 +22,7 @@ docker run -it hiromasaono/curl curl http://www.tagesschau.de
 ```
 
 ## squid status code
+[see here](https://wiki.squid-cache.org/SquidFaq/SquidLogs#Squid_result_codes)
 
 ```bash
 > squid -k debug -f /var/local/squid/squid.conf
@@ -147,7 +148,6 @@ openssl s_client -connect httpbin.org:443
 - ids
 - squid gard
 
-
 ## error language
  error_default_language de-de
 <http://master.squid-cache.org/Doc/config/error_default_language/>
@@ -269,4 +269,68 @@ ensure that NAT is performed on the same box as Squid.
 [overview blog entry](https://blog.scottlowe.org/2013/05/29/a-quick-introduction-to-linux-policy-routing/
 )
 
+## wget inside docker
 
+```bash
+# wget output to stdout instead file
+> wget -O - <URL>
+
+```
+
+```bash
+> docker run  -it mathiasstadler:curl  wget -O -  https://heise.de
+```
+
+```bash
+sudo iptables -A DOCKER  -i docker0 -p tcp-m tcp --dport 80 -s 0.0.0.0/0 -j ACCEPT
+```
+
+```bash
+sudo iptables -vnL
+```
+
+```bash
+iptables -I DOCKER -j ACCEPT -p tcp --destination 172.17.0.2 --dport http
+```
+
+```bash
+> /usr/sbin/squid -k reconfigure -f /var/local/squid/squid.conf
+```
+
+- [route show](https://linoxide.com/how-tos/how-to-flush-routing-table-from-cache/)
+
+```bash
+sudo ip route show cache
+sudo ip -s route show cache
+```
+
+```bash
+sudo ip route flush table main
+```
+
+
+[kernel oprion](http://www.tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.netfilter.html)
+```bash
+cat config-4.4.0-116-generic |grep -i CONFIG_IP_ADVANCED_ROUTER
+
+cat config-4.4.0-116-generic |grep -i CONFIG_IP_MULTIPLE_TABLES
+
+cat config-4.4.0-116-generic |grep -i CONFIG_IP_ROUTE_FWMARK
+
+```
+
+[routing mark packets](https://serverfault.com/questions/699481/route-ip-traffic-based-on-process-to-different-default-routes-interfaces)
+
+[routing linux 4.4](https://unix.stackexchange.com/questions/329772/achieving-per-packet-multipath-ip-routing-on-kernel-4-4)
+
+[policy_routing simple bounding](https://support.aa.net.uk/Router_-_Linux_upload_bonding_using_policy_routing)
+
+[policy routing sample](https://unix.stackexchange.com/questions/58635/iptables-set-mark-route-diferent-ports-through-different-interfaces)
+
+[Netfilter Connmark](https://home.regit.org/netfilter-en/netfilter-connmark/)
+
+[modprobe nf_conntrack_ipv4 or modprobe ip_conntrack](https://serverfault.com/questions/764768/iptables-and-connmark-on-ubuntu-14-04)
+
+[The connmark target](http://www.system-rescue-cd.org/networking/Load-balancing-using-iptables-with-connmark/)
+
+[Advanced networking and policy routing](http://www.system-rescue-cd.org/networking/Advanced-networking-and-policy-routing/)

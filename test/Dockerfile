@@ -11,6 +11,7 @@ RUN export DEBIAN_FRONTEND=noninteractive TERM=linux \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
+        wget \
         default-jdk \
     && rm -rf /var/lib/apt/lists/*
 
@@ -21,4 +22,6 @@ RUN javac HttpTest.java \
 
 RUN openssl version -a
 
-CMD /root/test-proxy.sh
+#CMD /root/test-proxy.sh
+
+CMD ["bash"]

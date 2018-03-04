@@ -18,7 +18,7 @@ readonly let HTTPS=443
 
 
 # name of routing table
-readonly ROUTINGTABLE="EXT_PROXY_CLIENT"
+readonly ROUTINGTABLE="VAGRANT_PROXY_CLIENT"
 
 #router network
 # TODO make dynamisch
@@ -27,7 +27,7 @@ readonly external_interface="eno1"
 # docker ip address
 # TODO check docker container is started
 # TODO check file exit and content valid
-IPADDR=$(cat .currentContainerIpAddr.txt)
+IPADDR="192.168.178.250"
 
 
 # TODO check forwarding active
@@ -36,14 +36,10 @@ cat /proc/sys/net/ipv4/ip_forward
 #IP OF TRAGET wo wird wirklich via hingerutetd
 
 # your proxy IP (docker container)
-SQUIDIP=$(cat .currentContainerIpAddr.txt)
+SQUIDIP="192.168.178.250"
 
 # TODO detect automatic save and nice
-DOCKER_GATEWAY_INTERFACE="docker0"
-
-#Host ip of DOCKER network
-# TODO detect automatic save and nice
-DOCKER_GATEWAY_IP="172.17.0.1"
+GATEWAY_INTERFACE="eno1"
 
 # add add  ROUTINGTABLE /etc/iproute2/rt_tables
 # TODO make dynamic
@@ -75,7 +71,7 @@ sudo ip rule show | grep ${ROUTINGTABLE} | cut -d: -f1 | xargs -r -L1 sudo ip ru
 
 log "info" "Set ip rule"
 ip rule show | grep -q "{$ROUTINGTABLE}" ||
-    sudo ip rule add from all fwmark 0x4 lookup "${ROUTINGTABLE}"
+    sudo ip rule add from all fwmark 0x6 lookup "${ROUTINGTABLE}"
 
 ip rule show
 
@@ -84,11 +80,9 @@ ip route show table "$ROUTINGTABLE" | grep -q default &&
     sudo ip route del default table "${ROUTINGTABLE}"
 
 # set new ip route  for routingHost ip of DOCKER network
-sudo ip route add default via "${IPADDR}" dev "${DOCKER_GATEWAY_INTERFACE}" table "${ROUTINGTABLE}"
+sudo ip route add default via "${SQUIDIP}" dev "${GATEWAY_INTERFACE}" table "${ROUTINGTABLE}"
 
 log "info" "show route"
-
-
 
 log "info" "show route table ${ROUTINGTABLE}
     sudo ip route show table ${ROUTINGTABLE}"
@@ -98,21 +92,18 @@ log "info" "show route table ${ROUTINGTABLE}
 
 COMMON_RULES=" -t mangle -I PREROUTING -p tcp"
 
-
-readonly MARK_RULES=" -j MARK --set-mark 4"
-
+readonly MARK_RULES=" -j MARK --set-mark 6"
 
 # set for port HTTP
-sudo iptables ${COMMON_RULES} -i ${external_interface} --dport $HTTP  ${MARK_RULES}
+sudo iptables ${COMMON_RULES} -i ${external_interface} -o ${SQUIDIP} --dport $HTTP  ${MARK_RULES}
 
 # accept connection
-iptables -t nat -A PREROUTING -i ${external_interface} -s "$SQUIDIP" -p tcp --dport $HTTP -j ACCEPT
-
+iptables -t nat -A PREROUTING -i ${external_interface}  -p tcp --dport $HTTP -j ACCEPT
 
 # set for port HTTPS
-sudo iptables ${COMMON_RULES} -i ${external_interface} --dport $HTTPS  ${MARK_RULES}
+# sudo iptables ${COMMON_RULES} -i ${external_interface} --dport $HTTPS  ${MARK_RULES}
 
 # accept connection
-iptables -t nat -A PREROUTING -i ${external_interface} -s "$SQUIDIP" -p tcp --dport $HTTPS -j ACCEPT
+# iptables -t nat -A PREROUTING -i ${external_interface} -s "$SQUIDIP" -p tcp --dport $HTTPS -j ACCEPT
 
 iptables -t nat -A POSTROUTING -o "$external_interface" -j MASQUERADE
