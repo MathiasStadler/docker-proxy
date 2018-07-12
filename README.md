@@ -6,7 +6,7 @@
 
 - vi squid.conf
 - build docker images new
-- docker build  -t docker-proxy .
+- docker build -t docker-proxy .
 
 ## DOCKER build behind proxy
 
@@ -23,7 +23,7 @@ docker build --build-arg http_proxy=http://192.168.178.32:3128 -t mathiasstatdle
 ## ERROR Connection rest by cliant
 
 - ERROR was rised by SQUID DOCKER WGET during the build process
-- add --enable-http-violations  to squid.patch
+- add --enable-http-violations to squid.patch
 - add
 
 ```bash
@@ -52,7 +52,7 @@ vi /etc/squid/not-to-cache-sites.txt
 
 - add following or your entries
 
-/* spell-checker: disable */
+/_ spell-checker: disable _/
 
 ```bash
 bankalhabib.com
@@ -62,7 +62,7 @@ nae.com.pk
 jang.com.pk
 ```
 
-/* spell-checker: enable */
+/_ spell-checker: enable _/
 
 - Credits goes to Kevin Littlejohn
 
@@ -94,7 +94,15 @@ openssl s_client -connect 192.168.178.32:443 -state -debug
 
 ## install ping
 
-- apt-get update && apt-get install iputils-ping
+```bash
+apt-get update && apt-get install iputils-ping
+```
+
+## instll dig
+
+```bash
+sudo apt-get install dnsutils
+```
 
 ## documentation squid debug code
 
@@ -106,8 +114,8 @@ openssl s_client -connect 192.168.178.32:443 -state -debug
 
 - inside docker box
 - login to image ./bash_container.sh
-- curl --proxy 127.0.0.1:3128 www.tagesschau.de  => TCP_MISS/200 or TCP_REFRESH_MODIFIED/200
-- curl --proxy 127.0.0.1:3128 https://www.heise.de  => TCP TUNNEL
+- curl --proxy 127.0.0.1:3128 www.tagesschau.de => TCP_MISS/200 or TCP_REFRESH_MODIFIED/200
+- curl --proxy 127.0.0.1:3128 https://www.heise.de => TCP TUNNEL
 
 - on host server where docker run
 - curl --proxy IP_FROM_DOCKER_CONTAINER:3128 http://www.tagesschau.de
@@ -118,6 +126,6 @@ openssl s_client -connect 192.168.178.32:443 -state -debug
 
 ## see header of request
 
-curl -v -s -o  --proxy $(cat currentContainerIpAddr.txt):3128 https://github.com
+curl -v -s -o --proxy $(cat currentContainerIpAddr.txt):3128 https://github.com
 
 <!-- markdownlint-enable MD034 -->
