@@ -82,7 +82,9 @@ readonly let SQUIDPORT_HTTPS=3130
 # https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxDnat
 
 # for http
+# Without the first iptables line here being first, your setup may encounter problems with forwarding loops.
 iptables -t nat -A PREROUTING -i "$external_interface" -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
+iptables -t nat -A PREROUTING -i docker0 -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
 iptables -t nat -A PREROUTING -i "$external_interface" -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"
 iptables -t nat -A POSTROUTING -o "$external_interface" -j MASQUERADE
 iptables -t mangle -A PREROUTING -i "$external_interface" -p tcp --dport "$SQUIDPORT" -j DROP
