@@ -255,7 +255,7 @@ deleteOldContainer() {
 		echo "We delete the container now ... "
 		docker ps -a | grep "${CONTAINER_NAME}" | awk '{print $1}' | xargs --no-run-if-empty docker rm
 		if docker ps -a | grep "${CONTAINER_NAME}"; then
-			echo " Error we could't delete the container ${CONTAINER_NAME} ...Not OK"
+			echo " Error we couldnt delete the container ${CONTAINER_NAME} ...Not OK"
 			exit 1
 		else
 			echo "All ${CONTAINER_NAME} container deleted...OK"
