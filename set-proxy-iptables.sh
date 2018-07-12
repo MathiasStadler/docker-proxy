@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# Exit immediately if a command returns a non-zero status
+set -e
+
+# Check if we're root and re-execute if we're not.
+# from here
+# https://unix.stackexchange.com/questions/28454/how-do-i-force-the-user-to-become-root
+rootcheck() {
+	if [ "$(id -u)" != "0" ]; then
+		sudo "$0" "$@" # Modified as suggested below.
+		exit $?
+	fi
+}
+rootcheck "$@"
+
 # check kernel settings
 
 # Controls IP packet forwarding
@@ -28,7 +42,7 @@ fi
 
 # Do not accept source routing
 # net.ipv4.conf.default.accept_source_route = 0
-ACCEPT_SOURCE_ROUTE=$(cat cat /proc/sys/net/ipv4/conf/default/accept_source_route)
+ACCEPT_SOURCE_ROUTE=$(cat /proc/sys/net/ipv4/conf/default/accept_source_route)
 if [ "$ACCEPT_SOURCE_ROUTE" == "0" ]; then
 	echo "net.ipv4.conf.default.rp_filter = ${RP_FILTER} => OK"
 else
@@ -38,18 +52,6 @@ else
 fi
 
 # TODO set rules for iptables6
-
-# Check if we're root and re-execute if we're not.
-# from here
-# https://unix.stackexchange.com/questions/28454/how-do-i-force-the-user-to-become-root
-rootcheck() {
-	if [ "$(id -u)" != "0" ]; then
-		sudo "$0" "$@" # Modified as suggested below.
-		exit $?
-	fi
-}
-
-rootcheck "$@"
 
 # your proxy IP (docker container)
 SQUIDIP=$(cat .currentContainerIpAddr.txt)
