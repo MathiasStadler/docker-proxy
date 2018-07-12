@@ -21,5 +21,7 @@ gid=$(id -g proxy)
 echo "gid of ${gid}"
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --gid-owner "${gid}" -j ACCEPT
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
-sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --gid-owner "${gid}" -j ACCEPT
-sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
+
+# disable https
+# sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --gid-owner "${gid}" -j ACCEPT
+# sudo iptables -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
