@@ -20,6 +20,8 @@ gid=$(id -g proxy)
 # iptables -t nat -A POSTROUTING -j MASQUERADE
 # iptables -t mangle -A PREROUTING -p tcp --dport "${SQUIDPORT}" -j DROP
 
+# from here
+# https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxDnat
 echo "gid of ${gid}"
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --gid-owner "${gid}" -j ACCEPT
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
