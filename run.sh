@@ -13,7 +13,7 @@ CONFDIR=${CONFDIR:-${PWD}}
 LOGDIR=${LOGDIR:-${PWD}/log}
 
 #set env
-GIT_OWNER_NAME=$(git config user.name | tr '[:upper:]' '[:lower:]')
+GIT_OWNER_NAME=$(git config user.name | tr '[:upper:]' '[:lower:]' | sed 's/\W/-/g')
 BASH_OWNER_NAME=$(id -u -n)
 OWNER_NAME=${GIT_OWNER_NAME:-$BASH_OWNER_NAME}
 CONTAINER_NAME=${CONTAINER_NAME:-c-docker-unbound}
