@@ -52,6 +52,7 @@ else
 fi
 
 # TODO set rules for iptables6
+# e.g. see here
 
 # your proxy IP (docker container)
 SQUIDIP=$(cat .currentContainerIpAddr.txt)
