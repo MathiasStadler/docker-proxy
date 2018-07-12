@@ -290,11 +290,11 @@ runContainer() {
 
 	IPADDR=$(sudo docker inspect --format '{{ .NetworkSettings.IPAddress }}' "${CID}")
 
-	echo "${IPADDR}" >.currentContainerIpAddr.txt
+	echo "${IPADDR}" >\.currentContainerIpAddr.txt
 	#start_routing
 
 	#only for convenience see README.md
-	echo "${CID}" >.currentContainer.id
+	echo "${CID}" >\.currentContainer.id
 
 	#give docker few seconds
 	sleep 2
