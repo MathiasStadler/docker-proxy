@@ -5,7 +5,9 @@
 SQUIDIP=$(cat currentContainerIpAddr.txt)
 
 # your proxy listening port
-SQUIDPORT=3128
+# SQUIDPORT=3128
+# for INTERCEPT
+SQUIDPORT=3129
 
 # print gid of process
 # ps o user,pid,%cpu,%mem,vsz,rss,tty,stat,start,time,comm,group,gid
