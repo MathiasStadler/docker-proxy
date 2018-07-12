@@ -64,6 +64,10 @@ readonly external_interface="eno1"
 # your proxy listening port
 readonly let SQUIDPORT=3128
 
+# your proxy listening port
+# In Squid 3.1+ the transparent option has been split. Use 'intercept to catch DNAT packets
+readonly let SQUIDPORT_INTERCEPT=3129
+
 # PORT 3120 not working because squid detetct SECURITY ALERT: Host header forgery detected on
 # because squid has no access do nat different namespace
 # NOT WORKING SQUIDPORT_HTTPS=3130
@@ -79,9 +83,9 @@ readonly let SQUIDPORT_HTTPS=3130
 
 # for http
 iptables -t nat -A PREROUTING -i "$external_interface" -s "$SQUIDIP" -p tcp --dport 80 -j ACCEPT
-iptables -t nat -A PREROUTING -i "$external_interface" -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT"
+iptables -t nat -A PREROUTING -i "$external_interface" -p tcp --dport 80 -j DNAT --to-destination "$SQUIDIP:$SQUIDPORT_INTERCEPT"
 iptables -t nat -A POSTROUTING -o "$external_interface" -j MASQUERADE
-iptables -t mangle -A PREROUTING -i "$external_interface" -p tcp --dport "$SQUIDPORT" -j DROP
+iptables -t mangle -A PREROUTING -i "$external_interface" -p tcp --dport "$SQUIDPORT_INTERCEPT" -j DROP
 
 # disable
 # for https
