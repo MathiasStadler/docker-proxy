@@ -7,7 +7,7 @@ SQUIDIP=$(cat currentContainerIpAddr.txt)
 # your proxy listening port
 # SQUIDPORT=3128
 # for INTERCEPT
-SQUIDPORT=3128
+SQUIDPORT=3129
 
 # print gid of process
 # ps o user,pid,%cpu,%mem,vsz,rss,tty,stat,start,time,comm,group,gid
@@ -21,7 +21,7 @@ gid=$(id -g proxy)
 # iptables -t mangle -A PREROUTING -p tcp --dport "${SQUIDPORT}" -j DROP
 
 # from here
-# https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxDnat
+# https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxLocalhost
 echo "gid of ${gid}"
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --gid-owner "${gid}" -j ACCEPT
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
