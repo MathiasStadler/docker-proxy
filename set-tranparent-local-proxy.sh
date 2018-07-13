@@ -24,7 +24,7 @@ gid=$(id -g proxy)
 # https://wiki.squid-cache.org/ConfigExamples/Intercept/LinuxLocalhost
 echo "gid of ${gid}"
 sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -m owner --gid-owner "${gid}" -j ACCEPT
-sudo iptables -t nat -A OUTPUT --src 0/0 -p tcp --dport 80 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
+sudo iptables -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination "${SQUIDIP}:${SQUIDPORT}"
 
 # iptables -t nat -A OUTPUT --src 0/0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 
