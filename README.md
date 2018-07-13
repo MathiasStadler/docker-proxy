@@ -104,6 +104,14 @@ apt-get update && apt-get install iputils-ping
 sudo apt-get install dnsutils
 ```
 
+## install editor vim
+
+```bash
+echo "deb-src http://security.ubuntu.com/ubuntu/ xenial-security main restricted" >>/etc/apt/sources.list
+apt-get update
+apt-get install vim
+```
+
 ## documentation squid debug code
 
 [see here](http://etutorials.org/Server+Administration/Squid.+The+definitive+guide/Chapter+16.+Debugging+and+Troubleshooting/16.2+Debugging+via+cache.log/)
