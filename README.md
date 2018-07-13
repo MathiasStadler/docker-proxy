@@ -137,3 +137,31 @@ apt-get install -y vim
 curl -v -s -o --proxy $(cat currentContainerIpAddr.txt):3128 https://github.com
 
 <!-- markdownlint-enable MD034 -->
+
+## dns problem
+
+```txt
+http://squid-web-proxy-cache.1019090.n4.nabble.com/Inconsistent-accessing-of-the-cache-craigslist-org-images-wacky-stuff-td4674181.html
+```
+
+## dns server entry squid.conf
+
+```txt
+dns_nameservers 10.0.0.1 192.172.0.4
+```
+
+## append_domain in squid.conf
+
+```bash
+append_domain .yourdomain.com
+```
+
+## intercepting caching
+
+```txt
+https://wiki.squid-cache.org/SquidFaq/InterceptionProxy
+```
+
+```
+
+```
