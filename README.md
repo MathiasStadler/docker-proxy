@@ -109,7 +109,7 @@ sudo apt-get install -y dnsutils
 ```bash
 echo "deb-src http://security.ubuntu.com/ubuntu/ xenial-security main restricted" >>/etc/apt/sources.list
 apt-get update
-apt-get install vim
+apt-get install -y vim
 ```
 
 ## documentation squid debug code
