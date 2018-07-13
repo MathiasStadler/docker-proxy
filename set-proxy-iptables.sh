@@ -53,6 +53,7 @@ fi
 
 # TODO set rules for iptables6
 # e.g. see here
+# https://wiki.squid-cache.org/Features/IPv6#How_do_I_enable_IPv6.3F
 
 # your proxy IP (docker container)
 SQUIDIP=$(cat .currentContainerIpAddr.txt)
