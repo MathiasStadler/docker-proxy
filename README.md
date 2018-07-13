@@ -101,7 +101,7 @@ apt-get update && apt-get install iputils-ping
 ## instll dig
 
 ```bash
-sudo apt-get install dnsutils
+sudo apt-get install -y dnsutils
 ```
 
 ## install editor vim
