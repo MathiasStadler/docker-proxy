@@ -165,3 +165,19 @@ https://wiki.squid-cache.org/SquidFaq/InterceptionProxy
 ```
 
 ```
+
+## Roberts squid tutorial
+
+```txt
+http://roberts.bplaced.net/index.php/linux-guides/centos-6-guides/proxy-server/squid-transparent-proxy-http-https
+```
+
+## squid in docker
+
+```txt
+https://github.com/jpetazzo/squid-in-a-can/blob/master/iptables_docker/deploy.py
+
+#or
+
+https://github.com/zootalures/docker-squid-sslintercept
+```
